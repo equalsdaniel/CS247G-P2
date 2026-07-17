@@ -295,6 +295,28 @@ hand-scored outer border (reads as "someone did this by hand"), i.e. the
 "combine both looks" option is fully available and costs nothing extra —
 it's just what the reference image looks like.
 
+**Open technical questions (research before/during week 1 spike):**
+
+- **Render pipeline: URP vs. Built-in.** Not yet decided. URP is Unity's
+  standard recommendation for AR Foundation on mobile/iPad performance
+  and is the likely default — but this must be confirmed and locked
+  *before* anyone starts building shaders or VFX against it, since
+  Built-in and URP shaders aren't drop-in compatible. Decide at project
+  creation (Unity Hub's New Project template picker), not after.
+- **Reference-image-library iteration workflow.** `ARTrackedImageManager`
+  requires glyphs to be registered in an `XRReferenceImageLibrary` asset.
+  Need to confirm the actual workflow for adding/swapping reference images
+  as art gets iterated week-to-week (Seals get real art in weeks 2–3, per
+  §10) — specifically whether the library needs a full reimport/rebuild
+  per change or supports incremental updates, since this directly affects
+  art iteration speed.
+- **Phoenix-mote VFX approach (§2's pitch-deck beat).** Needs to be
+  achievable with **free/built-in tooling only** (Unity Personal
+  constraint, see §12). Default assumption: Unity's built-in Particle
+  System plus a URP glow/bloom post-process gets this without a paid
+  shader pack — worth ~30 min of research to confirm before committing
+  design time to it in week 2.
+
 ---
 
 ## 10. Production plan (4 weeks)
