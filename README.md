@@ -1,15 +1,14 @@
 # CS247G-P2
 
-AR project repo for CS247G / SymSys 195G.
+Game project repo for CS247G / SymSys 195G.
 
 ## Status: tooling is set, concept is not
 
-**What's decided:** the technical approach. This repo assumes **Unity +
-AR Foundation (ARKit), using `ARTrackedImageManager`-based image tracking**
-— not a real AprilTag fiducial library — as the pipeline (see
-[`DESIGN.md`](./DESIGN.md) §9 for the reasoning). Repo scaffolding
-(`.gitignore`, `.gitattributes`/LFS, `LICENSE`) is set up around that
-stack.
+**What's decided:** Unity as the engine — it can support either an AR
+build (AR Foundation/ARKit, `ARTrackedImageManager`-based image tracking,
+not a real AprilTag fiducial library — see [`DESIGN.md`](./DESIGN.md) §9)
+or a 2D gridworld build from the same project setup. Repo scaffolding
+(`.gitignore`, `.gitattributes`/LFS, `LICENSE`) is in place either way.
 
 **What's NOT decided:** the storyline and the game mechanics. Those are
 still open. This repo does not represent a team decision on concept —
@@ -30,29 +29,16 @@ constraints, then we do group ideation and converge on one direction
 (likely a synthesis, not a single person's draft as-is) before locking
 `DESIGN.md` as the team's actual spec.
 
-## Related repo
-
-A separate 2D gridworld game repo will be set up alongside this one
-(different tech stack); that project's storyline is also still to be
-worked out as a group.
-
-## Team
-
-| Name | Relevant experience |
-|---|---|
-| Daniel | Unity, Xcode, GitHub, robotics |
-| Michelle | GitHub, robotics |
-| Xi | Vibe coding |
-| Alex | Vibe coding |
-
-Daniel is currently the only team member with Unity/Xcode experience —
-worth factoring into how we divide AR-specific build/deploy work vs.
-content/design work once mechanics are locked.
-
 ## Setup
 
 See [`SETUP.md`](./SETUP.md) for installing Unity Hub, Xcode signing, and
 Git LFS before pulling the eventual Unity project into this repo.
+
+## Tutorials & onboarding
+
+See [`TUTORIALS.md`](./TUTORIALS.md) for a learning path — Git/GitHub
+first, then Unity fundamentals, then AR- or 2D-specific material
+depending on which direction the team lands on.
 
 ## License
 

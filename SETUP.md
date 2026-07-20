@@ -154,13 +154,42 @@ to fix that after installing.
 
 ---
 
-## 6. Scene ownership (avoid merge pain)
+## 6. Branching, access, and how work gets integrated
+
+**Status: draft workflow, not finalized** — sketched here as a starting
+point to react to and adjust, not a locked process.
+
+- **Repo access**: Daniel has read/write/admin. Recommend everyone else
+  gets **write access with branch protection on `main`** (below), rather
+  than restricting who can push — the actual safety net should be the
+  review step, not withholding access.
+- **Branch model**: `main` stays deployable/stable. Everyone works on
+  their own feature branch (e.g. `xi/seal-3-puzzle`, `alex/mana-vision-ui`)
+  and opens a pull request into `main` rather than pushing directly.
+  This answers "how does Xi's branch get integrated" — she pushes her
+  branch, opens a PR, someone reviews and merges it; she never needs
+  push access to `main` itself for this to work.
+- **Review/merge**: **open item — team to decide.** Daniel reviews/merges
+  by default; recommend designating **one more person** as a second
+  reviewer so Daniel isn't the sole bottleneck (especially useful the week
+  Daniel is heads-down on the Xcode/build side). Candidates: Michelle or
+  Alex, based on whoever's more available that week — doesn't need to be
+  fixed to one person for the whole project. Put this on the agenda for
+  the next team sync rather than deciding it solo here.
+- **Turning on branch protection** (GitHub → repo Settings → Branches →
+  add rule for `main`): require a pull request before merging, and
+  optionally require at least one approval. This is what actually
+  prevents an accidental direct push to `main`, rather than relying on
+  everyone remembering not to.
+
+### Scene ownership (avoid merge pain)
 
 Per DESIGN.md §12: Force Text avoids opaque binary diffs, but scene/prefab
-merge conflicts are still the biggest realistic friction point. **Say out
-loud in the team channel when you start editing a scene**, and treat each
-scene as owned by one person at a time. Don't rely on Git to merge
-simultaneous scene edits.
+merge conflicts are still the biggest realistic friction point — this is
+on top of the branch workflow above, not instead of it. **Say out loud in
+the team channel when you start editing a scene**, and treat each scene as
+owned by one person at a time. Don't rely on Git to merge simultaneous
+scene edits, even across branches.
 
 ---
 
