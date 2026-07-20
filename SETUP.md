@@ -63,15 +63,16 @@ destructive — `rm -rf` on the wrong folder doesn't come back.
   iPad is only ever the deploy target, plugged in over USB. This means
   **it doesn't matter whose Mac does the building** — anyone with Xcode
   installed and the agreed signing setup (below) can build and deploy.
-- The team should agree on **one shared Apple ID** used for all
-  "Personal Team" signing in Xcode's Signing & Capabilities tab. If two
-  people sign with two different Apple IDs onto the same iPad, Xcode will
-  fight itself over provisioning profiles. This only matters because the
-  iPad itself is shared — everyone's own dev machine setup (Unity, Xcode
-  install) stays individual either way.
-- Personal Team limits: 3 devices max, 7-day provisioning profile expiry
-  — expect to redeploy from Xcode roughly weekly. Not a blocker with one
-  test iPad, just a recurring chore.
+- **Decision: each person signs with their own personal Apple ID**, not a
+  shared one. Tradeoff to know about: since the iPad itself is shared,
+  every time a *different* person's build gets deployed, Xcode has to
+  swap the provisioning profile, and the iPad will show an "Untrusted
+  Developer" prompt again — go to **Settings → General → VPN & Device
+  Management → [dev profile] → Trust** on the iPad to clear it (30-second
+  fix, not a real blocker, just expect it on signer handoffs).
+- Personal Team limits (per Apple ID): 3 devices max, 7-day provisioning
+  profile expiry — expect to redeploy from Xcode roughly weekly regardless
+  of whose Apple ID is signing.
 - We are **not** using TestFlight ($99/yr Developer Program) — not needed
   for a single test device. See DESIGN.md §12 for the full reasoning.
 - **Confirmed:** Stanford UIT's institutional Apple Developer Program
