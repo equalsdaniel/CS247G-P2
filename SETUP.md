@@ -59,15 +59,56 @@ destructive — `rm -rf` on the wrong folder doesn't come back.
 ## 3. Apple ID for signing (read DESIGN.md §12 first)
 
 - **Xcode is free** from the Mac App Store, no paid enrollment needed.
+  Xcode always runs on a **Mac** (it doesn't run on iPadOS at all) — the
+  iPad is only ever the deploy target, plugged in over USB. This means
+  **it doesn't matter whose Mac does the building** — anyone with Xcode
+  installed and the agreed signing setup (below) can build and deploy.
 - The team should agree on **one shared Apple ID** used for all
   "Personal Team" signing in Xcode's Signing & Capabilities tab. If two
   people sign with two different Apple IDs onto the same iPad, Xcode will
-  fight itself over provisioning profiles.
+  fight itself over provisioning profiles. This only matters because the
+  iPad itself is shared — everyone's own dev machine setup (Unity, Xcode
+  install) stays individual either way.
 - Personal Team limits: 3 devices max, 7-day provisioning profile expiry
   — expect to redeploy from Xcode roughly weekly. Not a blocker with one
   test iPad, just a recurring chore.
 - We are **not** using TestFlight ($99/yr Developer Program) — not needed
   for a single test device. See DESIGN.md §12 for the full reasoning.
+- **Confirmed:** Stanford UIT's institutional Apple Developer Program
+  account explicitly excludes student course projects ("Personal Apple
+  Developer accounts from Apple are recommended instead for student work"
+  — [uit.stanford.edu/service/adc](https://uit.stanford.edu/service/adc)).
+  So a personal free Apple ID + Personal Team signing (above) is the
+  correct path, not a workaround.
+
+### Open question: our iPad is a Stanford Lathrop loaner — is it MDM-supervised?
+
+Our test iPad is checked out from **The Hub @ Lathrop's Tech Desk**
+(free student equipment loans — see
+[thehub.stanford.edu/borrow-equipment](https://thehub.stanford.edu/services/computers-software-equipment/borrow-equipment)),
+not a personally-owned device. Stanford does run **Jamf** MDM on
+Stanford-affiliated Apple devices generally
+([uit.stanford.edu/service/StanfordJamf](https://uit.stanford.edu/service/StanfordJamf)),
+but public docs don't say whether the Lathrop loaner iPads specifically
+are enrolled and, if so, whether that blocks free-provisioned ("Personal
+Team") app installs.
+
+**Why this matters:** on a *supervised* iPad, installing a locally-built,
+free-provisioned app typically throws an "Untrusted Developer" error
+until someone with device access manually goes to **Settings → General →
+VPN & Device Management → [your dev profile] → Trust** — the device just
+needs to be connected to the Mac running Xcode and reachable, no paid
+account required. If Lathrop's iPads are supervised *and* lock that
+Settings path down (common in classroom-managed MDM configs to stop
+students installing arbitrary apps), the free Personal Team path may not
+work at all, and we'd need another arrangement.
+
+**Action item — ask before week 1 build spike, not during it:** ask
+whoever hands off the iPad at the Tech Desk (or the course TA) directly:
+*"Is this iPad enrolled in MDM/supervision, and can we sideload our own
+build via Xcode's free Personal Team signing, or do we need something
+else set up first?"* Don't assume either way — confirm it, since it
+changes the signing plan above.
 
 ---
 
