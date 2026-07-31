@@ -8,6 +8,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -91,10 +92,19 @@ namespace MurderVilla.Editor
             Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (material == null)
             {
-                Shader shader = Shader.Find("Universal Render Pipeline/Lit") ??
+                Shader shader = Shader.Find("HDRP/Lit") ??
+                                Shader.Find("Universal Render Pipeline/Lit") ??
                                 Shader.Find("Standard");
                 material = new Material(shader) { name = name };
                 AssetDatabase.CreateAsset(material, path);
+            }
+            else
+            {
+                Shader shader = Shader.Find("HDRP/Lit") ??
+                                Shader.Find("Universal Render Pipeline/Lit") ??
+                                Shader.Find("Standard");
+                if (material.shader != shader)
+                    material.shader = shader;
             }
 
             material.color = color;
@@ -166,6 +176,8 @@ namespace MurderVilla.Editor
             cameraObject.transform.SetParent(player.transform);
             cameraObject.transform.localPosition = new Vector3(0f, 0.65f, 0f);
             Camera camera = cameraObject.AddComponent<Camera>();
+            AddHdrpComponentIfAvailable(cameraObject,
+                "UnityEngine.Rendering.HighDefinition.HDAdditionalCameraData, Unity.RenderPipelines.HighDefinition.Runtime");
             cameraObject.AddComponent<AudioListener>();
             camera.tag = "MainCamera";
 
@@ -289,7 +301,7 @@ namespace MurderVilla.Editor
             helpObject.transform.SetParent(canvasObject.transform, false);
             Text help = helpObject.AddComponent<Text>();
             help.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            help.text = "WASD Move  |  Mouse Look  |  E Interact  |  Esc Cursor";
+            help.text = "WASD Move  |  Space Jump  |  Mouse Look  |  E Interact  |  Esc Cursor";
             help.fontSize = 16;
             help.alignment = TextAnchor.LowerLeft;
             help.color = new Color(1f, 1f, 1f, 0.75f);
@@ -321,6 +333,16 @@ namespace MurderVilla.Editor
                 new Color(1f, 0.78f, 0.55f), 10f);
             PointLight("Kitchen Light", new Vector3(-7f, 2.8f, -5f),
                 new Color(0.85f, 0.90f, 1f), 8f);
+
+            VolumeProfile profile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(
+                "Assets/Settings/SkyandFogSettingsProfile.asset");
+            if (profile != null)
+            {
+                GameObject volumeObject = new("Global Environment Volume");
+                Volume volume = volumeObject.AddComponent<Volume>();
+                volume.isGlobal = true;
+                volume.sharedProfile = profile;
+            }
         }
 
         private static void PointLight(string name, Vector3 position, Color color,
@@ -329,10 +351,19 @@ namespace MurderVilla.Editor
             GameObject lightObject = new(name);
             lightObject.transform.position = position;
             Light light = lightObject.AddComponent<Light>();
+            AddHdrpComponentIfAvailable(lightObject,
+                "UnityEngine.Rendering.HighDefinition.HDAdditionalLightData, Unity.RenderPipelines.HighDefinition.Runtime");
             light.type = LightType.Point;
             light.color = color;
             light.intensity = 2f;
             light.range = range;
+        }
+
+        private static void AddHdrpComponentIfAvailable(GameObject target, string typeName)
+        {
+            System.Type type = System.Type.GetType(typeName);
+            if (type != null && target.GetComponent(type) == null)
+                target.AddComponent(type);
         }
 
         private static GameObject Cube(string name, Transform parent, Vector3 position,

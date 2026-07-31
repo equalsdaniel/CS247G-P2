@@ -9,6 +9,7 @@ namespace MurderVilla.Player
         [SerializeField] private Camera viewCamera;
         [SerializeField, Min(0.1f)] private float moveSpeed = 4f;
         [SerializeField, Min(1f)] private float lookSensitivity = 18f;
+        [SerializeField, Min(0.1f)] private float jumpHeight = 1.25f;
         [SerializeField] private float gravity = -20f;
         [SerializeField, Range(45f, 89f)] private float verticalLookLimit = 85f;
 
@@ -54,8 +55,14 @@ namespace MurderVilla.Player
             input = Vector2.ClampMagnitude(input, 1f);
 
             Vector3 horizontal = transform.right * input.x + transform.forward * input.y;
-            if (_controller.isGrounded && _verticalVelocity < 0f)
-                _verticalVelocity = -2f;
+            if (_controller.isGrounded)
+            {
+                if (_verticalVelocity < 0f)
+                    _verticalVelocity = -2f;
+
+                if (Keyboard.current.spaceKey.wasPressedThisFrame)
+                    _verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            }
             _verticalVelocity += gravity * Time.deltaTime;
 
             Vector3 velocity = horizontal * moveSpeed + Vector3.up * _verticalVelocity;

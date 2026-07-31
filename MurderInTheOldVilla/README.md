@@ -5,14 +5,13 @@ English-language first-person detective game developed in Unity.
 ## Technical baseline
 
 - Unity `6000.5.5f1`
-- Universal Render Pipeline (URP) `17.5.0`
+- High Definition Render Pipeline (HDRP) `17.5.0`
 - Input System `1.19.0`
 - macOS desktop target
 - First-person keyboard and mouse controls
 
-URP is intentionally retained because the existing project and controller are
-already configured for it. The suggested FPS Horror Game Starter Pack is
-HDRP-only, so it is not part of this baseline.
+HDRP is used for compatibility with the FPS Horror Game Starter Pack and for
+the villa's atmospheric lighting.
 
 ## Open the project
 
@@ -20,14 +19,19 @@ HDRP-only, so it is not part of this baseline.
 2. In Unity Hub, choose **Add > Add project from disk**.
 3. Select this `MurderInTheOldVilla` directory.
 4. Allow Unity to resolve packages and import assets.
-5. On the first successful open, Unity automatically generates and opens
-   `Assets/_Project/Scenes/VillaPrototype.unity`.
-6. Press Play. If automatic generation did not run, choose
-   **Murder in Old Villa > Build Prototype Scene**.
+5. Acquire and download the free FPS Horror Game Starter Pack from the Unity
+   Asset Store. Its source is intentionally not redistributed in this repo.
+6. Import only its `Assets/FpsHorrorKit` content. Do not import its
+   `ProjectSettings`.
+7. Unity generates `Assets/_Project/Scenes/VillaHorrorPrototype.unity`.
+   If needed, choose **Murder in Old Villa > Build Horror Villa Scene**.
+8. Open that scene and press Play.
 
 ## Prototype controls
 
 - `WASD`: Move
+- `Left Shift`: Sprint
+- `Space`: Jump
 - Mouse: Look
 - `E`: Inspect or interact
 - `Escape`: Release or recapture the mouse
@@ -48,8 +52,8 @@ Assets/_Project/
     └── Player/
 ```
 
-Original gameplay code belongs under `_Project`. Imported Asset Store content
-belongs under `Assets/AssetStore` or `Assets/ThirdParty` and is intentionally
+Original gameplay code belongs under `_Project`. This project's downloaded
+starter-pack content lives under `Assets/FpsHorrorKit` and is intentionally
 excluded from the public repository.
 
 See [SETUP.md](./SETUP.md) for environment-import guidance and

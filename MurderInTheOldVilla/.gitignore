@@ -76,6 +76,8 @@ crashlytics-build.properties
 # through a public repository; commit only original project content.
 /Assets/AssetStore/
 /Assets/ThirdParty/
+/Assets/FpsHorrorKit/
+/Assets/FpsHorrorKit.meta
 /Assets/Creepy_Cat/
 /Assets/Creepy_Cat.meta
 /Assets/Starter Assets/

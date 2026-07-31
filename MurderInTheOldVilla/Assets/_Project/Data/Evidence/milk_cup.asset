@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: milk_cup
   m_EditorClassIdentifier: Assembly-CSharp::MurderVilla.InvestigationSystem.EvidenceDefinition
   id: milk_cup
-  title: Milk Cup
-  description: Sedative residue remains in the warm milk.
+  title: Drugged Milk Cup
+  description: Sedative residue remains in the milk. It was added before Mei delivered
+    it.
   relatedSuspect: 1
   contradictsEvidenceId: 

@@ -4,10 +4,11 @@
 
 1. Open the project with Unity `6000.5.5f1`.
 2. Wait until the status bar finishes importing and the Console has no errors.
-3. Confirm Unity automatically opens
-   `Assets/_Project/Scenes/VillaPrototype.unity`. If not, run
-   **Murder in Old Villa > Build Prototype Scene**.
-5. Enter Play Mode and test `WASD`, mouse look, `E`, and `Escape`.
+3. Confirm the free FPS Horror Game Starter Pack is installed locally under
+   `Assets/FpsHorrorKit`.
+4. Open `Assets/_Project/Scenes/VillaHorrorPrototype.unity`. If it is missing,
+   run **Murder in Old Villa > Build Horror Villa Scene**.
+5. Enter Play Mode and test `WASD`, `Left Shift`, `Space`, mouse look, and `E`.
 
 ## Editing rules
 
@@ -23,4 +24,4 @@
 2. Add suspect dialogue data and interrogation UI.
 3. Add replayable memory records.
 4. Add contradiction selection and validation.
-5. Replace graybox rooms with a URP-compatible old-villa environment.
+5. Replace placeholder evidence meshes with final case-specific props.

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: flat_newspaper
   m_EditorClassIdentifier: Assembly-CSharp::MurderVilla.InvestigationSystem.EvidenceDefinition
   id: flat_newspaper
-  title: Flat Newspaper
-  description: It lies flat and untouched, contradicting the reported rustling.
+  title: Untouched Newspaper
+  description: The paper is flat. The reported rustling in a dark room was staged.
   relatedSuspect: 4
   contradictsEvidenceId: 

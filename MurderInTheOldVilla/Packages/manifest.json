@@ -1,9 +1,10 @@
 {
   "dependencies": {
+    "com.unity.cinemachine": "file:Packages/com.unity.cinemachine",
     "com.unity.inputsystem": "1.19.0",
     "com.unity.render-pipelines.core": "17.5.0",
-    "com.unity.render-pipelines.universal": "17.5.0",
-    "com.unity.render-pipelines.universal-config": "17.5.0",
+    "com.unity.render-pipelines.high-definition": "17.5.0",
+    "com.unity.splines": "file:Packages/com.unity.splines",
     "com.unity.ugui": "2.5.0",
     "com.unity.modules.accessibility": "1.0.0",
     "com.unity.modules.adaptiveperformance": "1.0.0",

@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MurderVilla.InvestigationSystem.EvidenceDefinition
   id: curtain_cord
   title: Curtain Cord
-  description: The suspected murder weapon. Su's fingerprints are present.
+  description: The murder weapon. Only Su's fingerprints are present.
   relatedSuspect: 2
   contradictsEvidenceId: 
