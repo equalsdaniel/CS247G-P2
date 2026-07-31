@@ -20,15 +20,16 @@ HDRP-only, so it is not part of this baseline.
 2. In Unity Hub, choose **Add > Add project from disk**.
 3. Select this `MurderInTheOldVilla` directory.
 4. Allow Unity to resolve packages and import assets.
-5. In Unity, choose **Murder in Old Villa > Build Prototype Scene**.
-6. Open `Assets/_Project/Scenes/VillaPrototype.unity` and press Play.
+5. On the first successful open, Unity automatically generates and opens
+   `Assets/_Project/Scenes/VillaPrototype.unity`.
+6. Press Play. If automatic generation did not run, choose
+   **Murder in Old Villa > Build Prototype Scene**.
 
 ## Prototype controls
 
 - `WASD`: Move
 - Mouse: Look
 - `E`: Inspect or interact
-- `Tab`: Investigation log (when its UI is present)
 - `Escape`: Release or recapture the mouse
 
 ## Source layout

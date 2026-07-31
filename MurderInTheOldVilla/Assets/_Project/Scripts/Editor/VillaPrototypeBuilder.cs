@@ -13,12 +13,27 @@ using UnityEngine.UI;
 
 namespace MurderVilla.Editor
 {
+    [InitializeOnLoad]
     public static class VillaPrototypeBuilder
     {
         private const string Root = "Assets/_Project";
         private const string ScenePath = Root + "/Scenes/VillaPrototype.unity";
         private const string EvidencePath = Root + "/Data/Evidence";
         private const string MaterialPath = Root + "/Art/Materials";
+
+        static VillaPrototypeBuilder()
+        {
+            EditorApplication.delayCall += BuildOnFirstOpen;
+        }
+
+        private static void BuildOnFirstOpen()
+        {
+            if (Application.isBatchMode || File.Exists(ScenePath))
+                return;
+
+            Build();
+            EditorSceneManager.OpenScene(ScenePath);
+        }
 
         [MenuItem("Murder in Old Villa/Build Prototype Scene")]
         public static void Build()
@@ -255,6 +270,34 @@ namespace MurderVilla.Editor
             promptRect.anchorMin = promptRect.anchorMax = new Vector2(0.5f, 0.35f);
             promptRect.sizeDelta = new Vector2(700f, 60f);
             canvasObject.AddComponent<InteractionPromptUI>().Configure(interactor, prompt);
+
+            GameObject counterObject = new("Evidence Counter");
+            counterObject.transform.SetParent(canvasObject.transform, false);
+            Text counter = counterObject.AddComponent<Text>();
+            counter.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            counter.fontSize = 20;
+            counter.alignment = TextAnchor.UpperLeft;
+            counter.color = Color.white;
+            RectTransform counterRect = counter.rectTransform;
+            counterRect.anchorMin = counterRect.anchorMax = new Vector2(0f, 1f);
+            counterRect.pivot = new Vector2(0f, 1f);
+            counterRect.anchoredPosition = new Vector2(24f, -24f);
+            counterRect.sizeDelta = new Vector2(320f, 40f);
+            counterObject.AddComponent<EvidenceCounterUI>().Configure(counter, 4);
+
+            GameObject helpObject = new("Controls");
+            helpObject.transform.SetParent(canvasObject.transform, false);
+            Text help = helpObject.AddComponent<Text>();
+            help.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            help.text = "WASD Move  |  Mouse Look  |  E Interact  |  Esc Cursor";
+            help.fontSize = 16;
+            help.alignment = TextAnchor.LowerLeft;
+            help.color = new Color(1f, 1f, 1f, 0.75f);
+            RectTransform helpRect = help.rectTransform;
+            helpRect.anchorMin = helpRect.anchorMax = new Vector2(0f, 0f);
+            helpRect.pivot = new Vector2(0f, 0f);
+            helpRect.anchoredPosition = new Vector2(24f, 20f);
+            helpRect.sizeDelta = new Vector2(650f, 32f);
 
             if (Object.FindAnyObjectByType<EventSystem>() == null)
             {

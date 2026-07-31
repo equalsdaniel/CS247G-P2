@@ -4,8 +4,9 @@
 
 1. Open the project with Unity `6000.5.5f1`.
 2. Wait until the status bar finishes importing and the Console has no errors.
-3. Run **Murder in Old Villa > Build Prototype Scene**.
-4. Open `Assets/_Project/Scenes/VillaPrototype.unity`.
+3. Confirm Unity automatically opens
+   `Assets/_Project/Scenes/VillaPrototype.unity`. If not, run
+   **Murder in Old Villa > Build Prototype Scene**.
 5. Enter Play Mode and test `WASD`, mouse look, `E`, and `Escape`.
 
 ## Editing rules

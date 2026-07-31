@@ -16,7 +16,8 @@ therefore not imported into this URP baseline.
 
 After Unity finishes importing:
 
-1. Select **Murder in Old Villa > Build Prototype Scene**.
+1. The scene is generated automatically on first open. If needed, select
+   **Murder in Old Villa > Build Prototype Scene** manually.
 2. Confirm the scene was created at
    `Assets/_Project/Scenes/VillaPrototype.unity`.
 3. Open the scene and press Play.
