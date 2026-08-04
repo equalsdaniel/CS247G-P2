@@ -8,7 +8,6 @@ using UnityEditor.Animations;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 namespace MurderVilla.Editor
 {
@@ -17,22 +16,24 @@ namespace MurderVilla.Editor
     {
         private const string ScenePath = "Assets/_Project/Scenes/VillaHorrorPrototype.unity";
         private const string CharacterRootName = "Story Characters ABCDEF";
-        private const string OutfitRoot =
-            "Assets/_Project/ThirdParty/Quaternius/UltimateModularCharacters";
-        private const string AmyModel = OutfitRoot + "/Women/Amy_Formal.fbx";
-        private const string BenModel = OutfitRoot + "/Men/Ben_Casual.fbx";
-        private const string CocoModel = OutfitRoot + "/Women/Coco_Suit.fbx";
-        private const string DeanFelixModel = OutfitRoot + "/Men/Dean_Felix_Suit.fbx";
-        private const string EllaModel = OutfitRoot + "/Women/Ella_Worker.fbx";
+        private const string AssetRoot =
+            "Assets/_Project/ThirdParty/Quaternius/UniversalBaseCharacters";
+        private const string MaleModel = AssetRoot + "/Models/Superhero_Male_FullBody.fbx";
+        private const string FemaleModel = AssetRoot + "/Models/Superhero_Female_FullBody.fbx";
         private const string AnimationModel =
             "Assets/_Project/ThirdParty/Quaternius/UniversalAnimationLibrary/Animations/UAL1_Standard.fbx";
         private const string ControllerPath =
             "Assets/_Project/Art/Animations/NPCIdle.controller";
         private const string PreferredIdle = "Armature|Idle_Loop";
 
-        private static readonly string[] CharacterModels =
+        private static readonly string[] HairModels =
         {
-            AmyModel, BenModel, CocoModel, DeanFelixModel, EllaModel,
+            "Hair_Buns.fbx",
+            "Hair_SimpleParted.fbx",
+            "Hair_Long.fbx",
+            "Hair_Buzzed.fbx",
+            "Hair_BuzzedFemale.fbx",
+            "Hair_Beard.fbx",
         };
 
         private static bool buildQueued;
@@ -46,34 +47,6 @@ namespace MurderVilla.Editor
         public static void BuildFromMenu()
         {
             BuildCharacters(true);
-        }
-
-        [MenuItem("Murder in Old Villa/Validate Story Characters")]
-        public static void ValidateFromMenu()
-        {
-            EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
-            string[] names = { "Amy", "Ben", "Coco", "Dean", "Ella", "Felix" };
-            foreach (string characterName in names)
-            {
-                GameObject character = FindNamed("NPC " + characterName);
-                if (character == null)
-                    throw new InvalidOperationException($"Missing NPC {characterName}.");
-
-                Renderer[] renderers = character.GetComponentsInChildren<Renderer>(true);
-                if (renderers.Length == 0)
-                    throw new InvalidOperationException($"NPC {characterName} has no renderer.");
-
-                Bounds bounds = renderers[0].bounds;
-                foreach (Renderer renderer in renderers.Skip(1))
-                    bounds.Encapsulate(renderer.bounds);
-                Animator animator = character.GetComponentInChildren<Animator>();
-                string animationState = animator != null && animator.runtimeAnimatorController != null
-                    ? "animated"
-                    : "static";
-                Debug.Log($"CAST CHECK {characterName}: position={character.transform.position}, " +
-                    $"size={bounds.size}, {animationState}, nameTags=" +
-                    character.GetComponentsInChildren<WorldNameTag>(true).Length);
-            }
         }
 
         private static void QueueBuild()
@@ -100,7 +73,8 @@ namespace MurderVilla.Editor
 
         private static void BuildCharacters(bool forceRebuild)
         {
-            if (!File.Exists(ScenePath) || CharacterModels.Any(path => !File.Exists(path)))
+            if (!File.Exists(ScenePath) || !File.Exists(MaleModel) ||
+                !File.Exists(FemaleModel))
                 return;
 
             Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
@@ -112,17 +86,10 @@ namespace MurderVilla.Editor
                 UnityEngine.Object.DestroyImmediate(existing);
 
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
-            foreach (string modelPath in CharacterModels)
-                ConfigureHumanoidImporter(modelPath);
-            ConfigureHumanoidImporter(AnimationModel);
-
             RuntimeAnimatorController controller = CreateIdleController();
-            GameObject amyModel = AssetDatabase.LoadAssetAtPath<GameObject>(AmyModel);
-            GameObject benModel = AssetDatabase.LoadAssetAtPath<GameObject>(BenModel);
-            GameObject cocoModel = AssetDatabase.LoadAssetAtPath<GameObject>(CocoModel);
-            GameObject deanFelixModel = AssetDatabase.LoadAssetAtPath<GameObject>(DeanFelixModel);
-            GameObject ellaModel = AssetDatabase.LoadAssetAtPath<GameObject>(EllaModel);
-            if (CharacterModels.Any(path => AssetDatabase.LoadAssetAtPath<GameObject>(path) == null))
+            GameObject male = AssetDatabase.LoadAssetAtPath<GameObject>(MaleModel);
+            GameObject female = AssetDatabase.LoadAssetAtPath<GameObject>(FemaleModel);
+            if (male == null || female == null)
             {
                 Debug.LogWarning("Character FBX files are still importing. Try the character menu again.");
                 return;
@@ -138,17 +105,18 @@ namespace MurderVilla.Editor
                 forward = Vector3.forward;
             Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
 
-            // Keep the complete cast in a visible test formation near the spawn.
-            // Once the dialogue flow is approved these positions can be distributed
-            // through the villa without touching the character prefabs or dialogue.
-            Vector3 amyPosition = PlaceOnFloor(playerPosition + forward * 3.8f - right * 3f);
-            Vector3 benPosition = PlaceOnFloor(playerPosition + forward * 5.1f - right * 1.6f);
-            Vector3 cocoPosition = PlaceOnFloor(playerPosition + forward * 5.8f);
-            Vector3 deanPosition = PlaceOnFloor(playerPosition + forward * 5.1f + right * 1.6f);
-            Vector3 ellaPosition = PlaceOnFloor(playerPosition + forward * 3.8f + right * 3f);
-            Vector3 felixPosition = PlaceOnFloor(playerPosition + forward * 7.6f + right * 3.2f);
+            Vector3 amyPosition = FindAnchorPosition("Stairs",
+                playerPosition + forward * 5f + right * 2.5f, false);
+            Vector3 benPosition = FindAnchorPosition("Corridor_2",
+                playerPosition + forward * 10f - right * 2f, false);
+            Vector3 cocoPosition = PlaceOnFloor(playerPosition + forward * 7f - right * 2.4f);
+            Vector3 deanPosition = PlaceOnFloor(playerPosition + forward * 7f + right * 2.4f);
+            Vector3 ellaPosition = FindAnchorPosition("Kitchen",
+                playerPosition + forward * 12f + right * 3f, false);
+            Vector3 felixPosition = FindAnchorPosition("GothicBed",
+                playerPosition + forward * 13f, true);
 
-            CreateCharacter(root.transform, "Amy", amyModel, amyPosition,
+            CreateCharacter(root.transform, "Amy", female, HairModels[0], amyPosition,
                 0.98f, new Color(0.46f, 0.18f, 0.20f), controller, true,
                 new[]
                 {
@@ -157,7 +125,7 @@ namespace MurderVilla.Editor
                     "And I never touched the milk at all.",
                 });
 
-            CreateCharacter(root.transform, "Ben", benModel, benPosition,
+            CreateCharacter(root.transform, "Ben", male, HairModels[1], benPosition,
                 1.02f, new Color(0.16f, 0.26f, 0.38f), controller, true,
                 new[]
                 {
@@ -166,7 +134,7 @@ namespace MurderVilla.Editor
                     "I assumed Uncle Felix was still awake and went downstairs.",
                 });
 
-            CreateCharacter(root.transform, "Coco", cocoModel, cocoPosition,
+            CreateCharacter(root.transform, "Coco", female, HairModels[2], cocoPosition,
                 1.01f, new Color(0.24f, 0.15f, 0.34f), controller, true,
                 new[]
                 {
@@ -175,7 +143,7 @@ namespace MurderVilla.Editor
                     "I had no reason to hurt Felix.",
                 });
 
-            CreateCharacter(root.transform, "Dean", deanFelixModel, deanPosition,
+            CreateCharacter(root.transform, "Dean", male, HairModels[3], deanPosition,
                 1.04f, new Color(0.15f, 0.28f, 0.22f), controller, true,
                 new[]
                 {
@@ -184,7 +152,7 @@ namespace MurderVilla.Editor
                     "I assumed he had fallen asleep.",
                 });
 
-            CreateCharacter(root.transform, "Ella", ellaModel, ellaPosition,
+            CreateCharacter(root.transform, "Ella", female, HairModels[4], ellaPosition,
                 0.96f, new Color(0.42f, 0.36f, 0.22f), controller, true,
                 new[]
                 {
@@ -194,8 +162,8 @@ namespace MurderVilla.Editor
                     "After that, I remained in the kitchen.",
                 });
 
-            GameObject felix = CreateCharacter(root.transform, "Felix", deanFelixModel,
-                felixPosition, 1.05f, new Color(0.22f, 0.22f, 0.24f),
+            GameObject felix = CreateCharacter(root.transform, "Felix", male,
+                HairModels[5], felixPosition, 1.05f, new Color(0.22f, 0.22f, 0.24f),
                 null, false,
                 new[]
                 {
@@ -216,7 +184,7 @@ namespace MurderVilla.Editor
         }
 
         private static GameObject CreateCharacter(Transform parent, string characterName,
-            GameObject bodyPrefab, Vector3 position, float heightScale,
+            GameObject bodyPrefab, string hairFile, Vector3 position, float heightScale,
             Color accent, RuntimeAnimatorController controller, bool animate,
             string[] dialogue)
         {
@@ -231,8 +199,19 @@ namespace MurderVilla.Editor
             GameObject body = (GameObject)PrefabUtility.InstantiatePrefab(bodyPrefab, visual.transform);
             body.name = characterName + " Body";
             body.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
-            ApplyOutfitMaterials(body, characterName, accent);
+            ApplyCharacterMaterials(body, characterName, accent, false);
             ConfigureAnimator(body, controller, animate);
+
+            string hairPath = AssetRoot + "/Hairstyles/" + hairFile;
+            GameObject hairPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(hairPath);
+            if (hairPrefab != null)
+            {
+                GameObject hair = (GameObject)PrefabUtility.InstantiatePrefab(hairPrefab, visual.transform);
+                hair.name = characterName + " Hair";
+                hair.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+                ApplyCharacterMaterials(hair, characterName, accent, true);
+                ConfigureAnimator(hair, controller, animate);
+            }
 
             CapsuleCollider collider = character.AddComponent<CapsuleCollider>();
             collider.center = new Vector3(0f, 0.9f * heightScale, 0f);
@@ -243,7 +222,6 @@ namespace MurderVilla.Editor
             motion.Configure(visual.transform, animate);
             NPCDialogue npcDialogue = character.AddComponent<NPCDialogue>();
             npcDialogue.Configure(characterName, dialogue, motion, animate);
-            CreateNameTag(character.transform, characterName, heightScale);
 
             Vector3 faceCenter = Camera.main != null
                 ? Camera.main.transform.position
@@ -254,50 +232,6 @@ namespace MurderVilla.Editor
                 character.transform.rotation = Quaternion.LookRotation(direction.normalized);
 
             return character;
-        }
-
-        private static void CreateNameTag(Transform parent, string characterName,
-            float heightScale)
-        {
-            GameObject tag = new("Name Tag", typeof(RectTransform), typeof(Canvas),
-                typeof(CanvasScaler), typeof(WorldNameTag));
-            tag.transform.SetParent(parent, false);
-            tag.transform.localPosition = new Vector3(0f, 2.18f * heightScale, 0f);
-            tag.transform.localScale = Vector3.one * 0.0045f;
-
-            RectTransform tagRect = tag.GetComponent<RectTransform>();
-            tagRect.sizeDelta = new Vector2(250f, 58f);
-            Canvas canvas = tag.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.WorldSpace;
-            canvas.sortingOrder = 80;
-
-            GameObject background = new("Background", typeof(RectTransform), typeof(Image));
-            background.transform.SetParent(tag.transform, false);
-            Stretch(background.GetComponent<RectTransform>());
-            background.GetComponent<Image>().color = new Color(0.025f, 0.03f, 0.035f, 0.82f);
-
-            GameObject label = new("Label", typeof(RectTransform), typeof(Text));
-            label.transform.SetParent(tag.transform, false);
-            RectTransform labelRect = label.GetComponent<RectTransform>();
-            Stretch(labelRect);
-            labelRect.offsetMin = new Vector2(12f, 4f);
-            labelRect.offsetMax = new Vector2(-12f, -4f);
-            Text text = label.GetComponent<Text>();
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            text.text = characterName.ToUpperInvariant();
-            text.fontSize = 31;
-            text.fontStyle = FontStyle.Bold;
-            text.alignment = TextAnchor.MiddleCenter;
-            text.color = new Color(0.92f, 0.86f, 0.72f);
-            text.raycastTarget = false;
-        }
-
-        private static void Stretch(RectTransform rect)
-        {
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
         }
 
         private static void ConfigureAnimator(GameObject model,
@@ -375,72 +309,82 @@ namespace MurderVilla.Editor
             importer.SaveAndReimport();
         }
 
-        private static void ConfigureHumanoidImporter(string assetPath)
+        private static void ApplyCharacterMaterials(GameObject model, string name,
+            Color accent, bool hair)
         {
-            ModelImporter importer = AssetImporter.GetAtPath(assetPath) as ModelImporter;
-            if (importer == null || importer.animationType == ModelImporterAnimationType.Human)
-                return;
-
-            importer.animationType = ModelImporterAnimationType.Human;
-            importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
-            importer.SaveAndReimport();
-        }
-
-        private static void ApplyOutfitMaterials(GameObject model, string characterName,
-            Color accent)
-        {
-            const string materialFolder =
-                "Assets/_Project/Art/Materials/OutfitCharacters";
-            EnsureFolder(materialFolder);
-
+            EnsureFolder("Assets/_Project/Art/Materials/Characters");
             foreach (Renderer renderer in model.GetComponentsInChildren<Renderer>(true))
             {
                 Material[] source = renderer.sharedMaterials;
                 Material[] replacements = new Material[source.Length];
                 for (int i = 0; i < source.Length; i++)
-                    replacements[i] = OutfitMaterial(characterName, source[i], accent, i);
+                {
+                    string materialName = source[i] != null ? source[i].name : "Body";
+                    string key = hair || materialName.ToLowerInvariant().Contains("hair")
+                        ? "Hair"
+                        : materialName.ToLowerInvariant().Contains("eye") ? "Eyes" : "Body";
+                    replacements[i] = CharacterMaterial(name, key, accent);
+                }
                 renderer.sharedMaterials = replacements;
             }
         }
 
-        private static Material OutfitMaterial(string characterName, Material source,
-            Color accent, int index)
+        private static Material CharacterMaterial(string characterName, string part,
+            Color accent)
         {
-            string sourceName = source != null ? source.name : $"Part_{index}";
-            string safeName = string.Concat(sourceName.Select(character =>
-                char.IsLetterOrDigit(character) ? character : '_'));
-            string path =
-                $"Assets/_Project/Art/Materials/OutfitCharacters/{characterName}_{safeName}_{index}.mat";
+            string path = $"Assets/_Project/Art/Materials/Characters/{characterName}_{part}.mat";
             Material existing = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (existing != null)
                 return existing;
 
             Shader shader = Shader.Find("HDRP/Lit") ?? Shader.Find("Standard");
-            Material material = new(shader) { name = characterName + " " + sourceName };
-            Color color = Color.white;
-            if (source != null)
+            Material material = new(shader) { name = characterName + " " + part };
+            Color color = part switch
             {
-                if (source.HasProperty("_BaseColor"))
-                    color = source.GetColor("_BaseColor");
-                else if (source.HasProperty("_Color"))
-                    color = source.GetColor("_Color");
-            }
-
-            string lowerName = sourceName.ToLowerInvariant();
-            bool naturalColor = lowerName.Contains("skin") || lowerName.Contains("face") ||
-                lowerName.Contains("hair") || lowerName.Contains("eye");
-            if (!naturalColor)
-                color = Color.Lerp(color, accent, 0.22f);
-
+                "Hair" => Color.Lerp(accent, Color.black, 0.58f),
+                "Eyes" => new Color(0.22f, 0.12f, 0.06f),
+                _ => Color.Lerp(Color.white, accent, 0.12f),
+            };
             if (material.HasProperty("_BaseColor"))
                 material.SetColor("_BaseColor", color);
             if (material.HasProperty("_Color"))
                 material.SetColor("_Color", color);
             if (material.HasProperty("_Smoothness"))
-                material.SetFloat("_Smoothness", 0.24f);
+                material.SetFloat("_Smoothness", 0.28f);
 
+            Texture2D texture = CharacterTexture(characterName, part);
+            if (texture != null)
+            {
+                if (material.HasProperty("_BaseColorMap"))
+                    material.SetTexture("_BaseColorMap", texture);
+                if (material.HasProperty("_MainTex"))
+                    material.SetTexture("_MainTex", texture);
+            }
             AssetDatabase.CreateAsset(material, path);
             return material;
+        }
+
+        private static Texture2D CharacterTexture(string characterName, string part)
+        {
+            const string textures = AssetRoot + "/Textures/";
+            if (part == "Eyes")
+                return AssetDatabase.LoadAssetAtPath<Texture2D>(textures + "T_Eye_Brown.png");
+            if (part == "Hair")
+            {
+                string hairTexture = characterName is "Amy" or "Dean" or "Felix"
+                    ? "T_Hair_1_BaseColor.png"
+                    : "T_Hair_2_BaseColor.png";
+                return AssetDatabase.LoadAssetAtPath<Texture2D>(textures + hairTexture);
+            }
+
+            bool female = characterName is "Amy" or "Coco" or "Ella";
+            bool dark = characterName is "Coco" or "Dean";
+            string bodyTexture = female
+                ? dark ? "T_Superhero_Female_Dark_BaseColor.png"
+                    : "T_Superhero_Female_Light_BaseColor.png"
+                : dark ? "T_Superhero_Male_Dark.png"
+                    : "T_Superhero_Male_Ligh.png";
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(textures + bodyTexture);
         }
 
         private static Vector3 FindAnchorPosition(string objectName, Vector3 fallback,

@@ -139,31 +139,22 @@ namespace MurderVilla.Dialogue
             Image panelImage = panel.AddComponent<Image>();
             panelImage.color = new Color(0.035f, 0.045f, 0.055f, 0.96f);
             RectTransform panelRect = panel.GetComponent<RectTransform>();
-            panelRect.anchorMin = new Vector2(0.08f, 0.05f);
-            panelRect.anchorMax = new Vector2(0.92f, 0.39f);
+            panelRect.anchorMin = new Vector2(0.08f, 0.06f);
+            panelRect.anchorMax = new Vector2(0.92f, 0.34f);
             panelRect.offsetMin = Vector2.zero;
             panelRect.offsetMax = Vector2.zero;
 
-            speakerLabel = CreateText(panel.transform, "Speaker", 30, FontStyle.Bold,
-                TextAnchor.MiddleLeft);
-            SetTopRect(speakerLabel.rectTransform, 22f, 44f, 52f);
+            speakerLabel = CreateText(panel.transform, "Speaker", 32, FontStyle.Bold,
+                TextAnchor.UpperLeft, new Vector2(42f, -28f), new Vector2(-42f, -76f));
             speakerLabel.color = new Color(0.78f, 0.18f, 0.13f);
 
-            GameObject divider = UiObject("Divider", panel.transform);
-            Image dividerImage = divider.AddComponent<Image>();
-            dividerImage.color = new Color(1f, 1f, 1f, 0.13f);
-            SetTopRect(divider.GetComponent<RectTransform>(), 72f, 2f, 52f);
-
-            dialogueLabel = CreateText(panel.transform, "Dialogue", 25, FontStyle.Normal,
-                TextAnchor.UpperLeft);
-            SetTopRect(dialogueLabel.rectTransform, 92f, 150f, 52f);
+            dialogueLabel = CreateText(panel.transform, "Dialogue", 27, FontStyle.Normal,
+                TextAnchor.UpperLeft, new Vector2(42f, -86f), new Vector2(-42f, -62f));
             dialogueLabel.horizontalOverflow = HorizontalWrapMode.Wrap;
             dialogueLabel.verticalOverflow = VerticalWrapMode.Truncate;
-            dialogueLabel.lineSpacing = 1.12f;
 
             continueLabel = CreateText(panel.transform, "Continue", 17, FontStyle.Normal,
-                TextAnchor.MiddleRight);
-            SetBottomRect(continueLabel.rectTransform, 16f, 30f, 52f);
+                TextAnchor.LowerRight, new Vector2(42f, 20f), new Vector2(-42f, 54f));
             continueLabel.color = new Color(1f, 1f, 1f, 0.62f);
             canvasObject.SetActive(false);
         }
@@ -176,7 +167,7 @@ namespace MurderVilla.Dialogue
         }
 
         private static Text CreateText(Transform parent, string name, int size,
-            FontStyle style, TextAnchor alignment)
+            FontStyle style, TextAnchor alignment, Vector2 offsetMin, Vector2 offsetMax)
         {
             GameObject target = UiObject(name, parent);
             Text text = target.AddComponent<Text>();
@@ -187,27 +178,12 @@ namespace MurderVilla.Dialogue
             text.color = Color.white;
             text.raycastTarget = false;
 
-            return text;
-        }
-
-        private static void SetTopRect(RectTransform rect, float top, float height,
-            float horizontalPadding)
-        {
-            rect.anchorMin = new Vector2(0f, 1f);
-            rect.anchorMax = new Vector2(1f, 1f);
-            rect.pivot = new Vector2(0.5f, 1f);
-            rect.anchoredPosition = new Vector2(0f, -top);
-            rect.sizeDelta = new Vector2(-horizontalPadding * 2f, height);
-        }
-
-        private static void SetBottomRect(RectTransform rect, float bottom, float height,
-            float horizontalPadding)
-        {
+            RectTransform rect = target.GetComponent<RectTransform>();
             rect.anchorMin = Vector2.zero;
-            rect.anchorMax = new Vector2(1f, 0f);
-            rect.pivot = new Vector2(0.5f, 0f);
-            rect.anchoredPosition = new Vector2(0f, bottom);
-            rect.sizeDelta = new Vector2(-horizontalPadding * 2f, height);
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = offsetMin;
+            rect.offsetMax = offsetMax;
+            return text;
         }
 
         private static void Stretch(RectTransform rect)
