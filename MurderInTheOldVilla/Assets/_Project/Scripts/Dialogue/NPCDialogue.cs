@@ -10,11 +10,14 @@ namespace MurderVilla.Dialogue
         [SerializeField] private bool canTalk = true;
         [SerializeField] private NPCIdleMotion idleMotion;
 
+        private float nextInteractionTime;
+
         public string InteractionPrompt => canTalk
             ? $"Talk to {characterName} [E]"
             : $"Examine {characterName} [E]";
 
-        public bool CanInteract => !DialogueManager.IsDialogueOpen;
+        public bool CanInteract => !DialogueManager.IsDialogueOpen &&
+            Time.unscaledTime >= nextInteractionTime;
 
         public void Interact()
         {
@@ -28,6 +31,12 @@ namespace MurderVilla.Dialogue
         {
             if (idleMotion != null)
                 idleMotion.SetTalking(talking);
+
+            // The interaction ray also processes E on the frame that closes the
+            // final line. A short cooldown prevents that same key press from
+            // immediately reopening the conversation.
+            if (!talking)
+                nextInteractionTime = Time.unscaledTime + 0.35f;
         }
 
         public void Configure(string displayName, string[] dialogueLines,
