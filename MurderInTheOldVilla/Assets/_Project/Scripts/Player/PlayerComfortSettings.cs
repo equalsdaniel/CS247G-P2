@@ -1,4 +1,5 @@
 using System.Reflection;
+using MurderVilla.Dialogue;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -38,6 +39,12 @@ namespace MurderInTheOldVilla.Player
         {
             if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             {
+                if (DialogueManager.IsDialogueOpen)
+                {
+                    DialogueManager.Instance.Close();
+                    return;
+                }
+
                 SetCursorCaptured(!cursorCaptured);
             }
 

@@ -138,29 +138,29 @@ namespace MurderVilla.Editor
                 PlaceOnFloor(player.position + forward * 4f + right * 1.5f, 0.12f),
                 new Vector3(0.18f, 0.16f, 0.18f), material,
                 Definition("milk_cup", "Drugged Milk Cup",
-                    "Sedative residue remains in the milk. It was added before Mei delivered it.",
-                    SuspectId.LinY));
+                    "Sedative residue remains in the milk. It was added before Ella delivered it.",
+                    SuspectId.Amy));
 
             EvidenceObject("Untouched Newspaper", PrimitiveType.Cube, root.transform,
                 PlaceOnFloor(player.position + forward * 7f - right * 1.5f, 0.06f),
                 new Vector3(0.65f, 0.04f, 0.45f), material,
                 Definition("flat_newspaper", "Untouched Newspaper",
                     "The paper is flat. The reported rustling in a dark room was staged.",
-                    SuspectId.LinH));
+                    SuspectId.Ben));
 
             EvidenceObject("Curtain Cord", PrimitiveType.Cylinder, root.transform,
                 PlaceOnFloor(player.position + forward * 10f + right * 2f, 0.55f),
                 new Vector3(0.055f, 0.55f, 0.055f), material,
                 Definition("curtain_cord", "Curtain Cord",
-                    "The murder weapon. Only Su's fingerprints are present.",
-                    SuspectId.Su));
+                    "The murder weapon. Only Coco's fingerprints are present.",
+                    SuspectId.Coco));
 
-            EvidenceObject("Wang Private USB", PrimitiveType.Cube, root.transform,
+            EvidenceObject("Dean Private USB", PrimitiveType.Cube, root.transform,
                 PlaceOnFloor(player.position + forward * 13f - right * 2f, 0.08f),
                 new Vector3(0.16f, 0.06f, 0.32f), material,
-                Definition("wang_usb", "Wang's Private USB",
-                    "The original footage shows Su going upstairs alone at 22:15.",
-                    SuspectId.Wang));
+                Definition("wang_usb", "Dean's Private USB",
+                    "The original footage shows Coco going upstairs alone at 22:15.",
+                    SuspectId.Dean));
         }
 
         private static Vector3 PlaceOnFloor(Vector3 around, float height)

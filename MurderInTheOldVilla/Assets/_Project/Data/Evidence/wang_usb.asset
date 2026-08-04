@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: wang_usb
   m_EditorClassIdentifier: Assembly-CSharp::MurderVilla.InvestigationSystem.EvidenceDefinition
   id: wang_usb
-  title: Wang's Private USB
-  description: The original footage shows Su going upstairs alone at 22:15.
+  title: Dean's Private USB
+  description: The original footage shows Coco going upstairs alone at 22:15.
   relatedSuspect: 3
   contradictsEvidenceId: 

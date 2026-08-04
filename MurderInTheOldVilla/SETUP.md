@@ -27,6 +27,8 @@ After Unity finishes importing:
 5. Open the scene and press Play.
 6. Walk with `WASD`, sprint with `Left Shift`, jump with `Space`, look with the
    mouse, and collect evidence with `E`.
+7. If the cast is missing, choose **Murder in Old Villa > Add Story Characters
+   (ABCDEF)**. The checked-in scene normally already contains all six characters.
 
 Running the generator again safely rebuilds the generated scene and evidence
 data.

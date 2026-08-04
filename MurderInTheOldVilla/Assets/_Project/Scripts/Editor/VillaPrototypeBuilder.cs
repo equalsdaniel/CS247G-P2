@@ -200,22 +200,22 @@ namespace MurderVilla.Editor
             EvidenceObject("Milk Cup", PrimitiveType.Cylinder, root.transform,
                 new Vector3(-7f, 1.35f, -6.7f), new Vector3(0.25f, 0.18f, 0.25f),
                 material, Definition("milk_cup", "Milk Cup",
-                    "Sedative residue remains in the warm milk.", SuspectId.LinY));
+                    "Sedative residue remains in the warm milk.", SuspectId.Amy));
             EvidenceObject("Flat Newspaper", PrimitiveType.Cube, root.transform,
                 new Vector3(7.2f, 0.93f, 5.8f), new Vector3(0.65f, 0.025f, 0.45f),
                 material, Definition("flat_newspaper", "Flat Newspaper",
                     "It lies flat and untouched, contradicting the reported rustling.",
-                    SuspectId.LinH));
+                    SuspectId.Ben));
             EvidenceObject("Curtain Cord", PrimitiveType.Cylinder, root.transform,
                 new Vector3(9.8f, 1.1f, 7.9f), new Vector3(0.06f, 0.65f, 0.06f),
                 material, Definition("curtain_cord", "Curtain Cord",
-                    "The suspected murder weapon. Su's fingerprints are present.",
-                    SuspectId.Su));
+                    "The suspected murder weapon. Coco's fingerprints are present.",
+                    SuspectId.Coco));
             EvidenceObject("Private USB", PrimitiveType.Cube, root.transform,
                 new Vector3(-1.5f, 0.12f, 5f), new Vector3(0.16f, 0.05f, 0.35f),
-                material, Definition("wang_usb", "Wang's Private USB",
+                material, Definition("wang_usb", "Dean's Private USB",
                     "It may contain the unmodified surveillance recording.",
-                    SuspectId.Wang));
+                    SuspectId.Dean));
         }
 
         private static EvidenceDefinition Definition(string id, string title,

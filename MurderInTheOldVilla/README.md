@@ -34,7 +34,22 @@ the villa's atmospheric lighting.
 - `Space`: Jump
 - Mouse: Look
 - `E`: Inspect or interact
+- `E`, `Space`, or left click: Advance dialogue
+- `Q`: Leave dialogue or cancel inspection
 - `Escape`: Release or recapture the mouse
+
+## Character cast (ABCDEF)
+
+- **Amy** — Felix's niece; mastermind who sedated the milk.
+- **Ben** — Felix's nephew; innocent witness outside the bedroom.
+- **Coco** — Felix's cousin; direct murderer.
+- **Dean** — housekeeper; coerced witness who altered his statement.
+- **Ella** — maid; innocent milk deliverer and red herring.
+- **Felix** — villa owner and murder victim.
+
+The five living characters use looping idle animation, subtle procedural motion,
+and turn toward the player during conversations. Felix is deliberately motionless
+at the crime scene.
 
 ## Source layout
 
@@ -49,12 +64,17 @@ Assets/_Project/
     ├── Editor/
     ├── Interaction/
     ├── Investigation/
+    ├── Dialogue/
     └── Player/
 ```
 
 Original gameplay code belongs under `_Project`. This project's downloaded
 starter-pack content lives under `Assets/FpsHorrorKit` and is intentionally
 excluded from the public repository.
+
+Character models and animations are from Quaternius' Universal Base Characters
+and Universal Animation Library. Both are distributed under CC0; their license
+files are included under `Assets/_Project/ThirdParty/Quaternius/Licenses`.
 
 See [SETUP.md](./SETUP.md) for environment-import guidance and
 [DESIGN.md](./DESIGN.md) for the current case specification.
