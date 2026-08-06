@@ -17,8 +17,6 @@ namespace MurderVilla.Dialogue
         public static DialogueManager Instance { get; private set; }
         public static bool IsDialogueOpen => Instance != null && Instance.state != DialogueState.Hidden;
 
-        private const float CooldownSeconds = 30f;
-
         // ── State ──────────────────────────────────────────────────
         private DialogueState state = DialogueState.Hidden;
         private NPCDialogue currentSpeaker;
@@ -26,7 +24,6 @@ namespace MurderVilla.Dialogue
         private DialogueBranch[] branches;
         private int activeBranchIndex;
         private int currentQAIndex;
-        private float cooldownRemaining;
         private float stateEnterTime;
 
         // ── UI root objects ────────────────────────────────────────
@@ -59,6 +56,7 @@ namespace MurderVilla.Dialogue
 
         private GameObject cooldownGroup;
         private Text cooldownLabel;
+        private Text cooldownFlavorText;
 
         // ── Initialisation ─────────────────────────────────────────
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -84,17 +82,16 @@ namespace MurderVilla.Dialogue
         // ── Update (cooldown timer) ────────────────────────────────
         private void Update()
         {
-            if (state == DialogueState.Cooldown)
+            // Per-character cooldown: tick the UI if we're showing it
+            if (state == DialogueState.Cooldown && currentSpeaker != null)
             {
-                cooldownRemaining -= Time.unscaledDeltaTime;
-                if (cooldownRemaining <= 0f)
+                if (!currentSpeaker.IsOnCooldown)
                 {
-                    cooldownRemaining = 0f;
                     SetState(DialogueState.Idle);
                 }
                 else
                 {
-                    int seconds = Mathf.CeilToInt(cooldownRemaining);
+                    int seconds = Mathf.CeilToInt(currentSpeaker.CooldownRemaining);
                     cooldownLabel.text = $"Cooldown: {seconds}s";
                 }
             }
@@ -104,13 +101,28 @@ namespace MurderVilla.Dialogue
         public void Begin(NPCDialogue speaker)
         {
             if (speaker == null) return;
-            if (state == DialogueState.Cooldown) return; // still cooling down
+
+            // Per-character cooldown: this NPC is still cooling down
+            if (speaker.IsOnCooldown)
+            {
+                canvas.gameObject.SetActive(true);
+                SetPlayerInteraction(true);
+                SetCursor(false);
+                currentSpeaker = speaker;
+                characterName = speaker.CharacterName;
+                SetState(DialogueState.Cooldown);
+                return;
+            }
 
             currentSpeaker = speaker;
             characterName = speaker.CharacterName;
             branches = speaker.Branches;
 
-            if (branches == null || branches.Length == 0)
+            if (speaker.IsMonologue)
+            {
+                // Monologue mode: no branches needed
+            }
+            else if (branches == null || branches.Length == 0)
             {
                 Debug.LogWarning($"{characterName} has no dialogue branches defined.");
                 return;
@@ -184,8 +196,16 @@ namespace MurderVilla.Dialogue
                 case DialogueState.ShowingResponse:
                     titleLabel.text = characterName.ToUpperInvariant();
                     responseGroup.SetActive(true);
-                    responseText.text = branches[activeBranchIndex].responseText;
-                    continueButton.GetComponentInChildren<Text>().text = "Continue";
+                    if (currentSpeaker != null && currentSpeaker.IsMonologue)
+                    {
+                        responseText.text = currentSpeaker.MonologueText;
+                        continueButton.GetComponentInChildren<Text>().text = "Close";
+                    }
+                    else
+                    {
+                        responseText.text = branches[activeBranchIndex].responseText;
+                        continueButton.GetComponentInChildren<Text>().text = "Continue";
+                    }
                     break;
 
                 case DialogueState.QASequence:
@@ -219,17 +239,24 @@ namespace MurderVilla.Dialogue
                 case DialogueState.Ended:
                     titleLabel.text = characterName.ToUpperInvariant();
                     endedGroup.SetActive(true);
-                    endedLabel.text = "Conversation ended";
-                    // Auto-transition to cooldown after a short delay,
-                    // but only once the player has seen this screen.
-                    // We keep the Ended screen visible until player interaction.
+                    if (currentSpeaker != null && currentSpeaker.IsMonologue)
+                    {
+                        endedLabel.text = "— End of testimony —";
+                        var endBtn = endedGroup.transform.Find("Ended Continue");
+                        if (endBtn != null)
+                            endBtn.GetComponentInChildren<Text>().text = "Close";
+                    }
+                    else
+                    {
+                        endedLabel.text = "Conversation ended";
+                    }
                     break;
 
                 case DialogueState.Cooldown:
                     titleLabel.text = characterName.ToUpperInvariant();
                     cooldownGroup.SetActive(true);
-                    cooldownRemaining = CooldownSeconds;
-                    cooldownLabel.text = $"Cooldown: {CooldownSeconds}s";
+                    cooldownLabel.text = $"Cooldown: {Mathf.CeilToInt(currentSpeaker != null ? currentSpeaker.CooldownRemaining : 0f)}s";
+                    cooldownFlavorText.text = "\"Go ask someone else instead of pestering me nonstop. Why are you so suspicious of me anyway?\"";
                     startButton.interactable = false;
                     break;
             }
@@ -267,6 +294,13 @@ namespace MurderVilla.Dialogue
         public void OnStartClicked()
         {
             if (state != DialogueState.Idle) return;
+            if (currentSpeaker != null && currentSpeaker.IsMonologue)
+            {
+                // Monologue: skip question select, go straight to the text
+                currentSpeaker.SetTalking(false);
+                SetState(DialogueState.ShowingResponse);
+                return;
+            }
             SetState(DialogueState.QuestionSelect);
         }
 
@@ -328,8 +362,15 @@ namespace MurderVilla.Dialogue
         public void OnEndedContinueClicked()
         {
             if (state != DialogueState.Ended) return;
-            // Start cooldown
+            if (currentSpeaker != null && currentSpeaker.IsMonologue)
+            {
+                // Monologue: no cooldown, just close
+                Close();
+                return;
+            }
+            // Start per-character cooldown
             currentSpeaker?.SetTalking(false);
+            currentSpeaker?.StartCooldown();
             SetState(DialogueState.Cooldown);
         }
 
@@ -360,6 +401,7 @@ namespace MurderVilla.Dialogue
                 }
                 if (state == DialogueState.Cooldown)
                 {
+                    // Close UI but cooldown persists on the NPC
                     Close();
                     return;
                 }
@@ -590,13 +632,21 @@ namespace MurderVilla.Dialogue
 
             cooldownLabel = MakeText(cooldownGroup.transform, "Cooldown Label", 30, FontStyle.Bold,
                 TextAnchor.MiddleCenter,
-                new Vector2(0.5f, 0.55f), new Vector2(0.5f, 0.55f),
+                new Vector2(0.5f, 0.65f), new Vector2(0.5f, 0.65f),
                 new Vector2(0f, 0f), new Vector2(400f, 60f));
             cooldownLabel.color = new Color(0.55f, 0.55f, 0.55f);
 
+            // Flavor text during cooldown
+            cooldownFlavorText = MakeText(cooldownGroup.transform, "Flavor Text", 18, FontStyle.Italic,
+                TextAnchor.MiddleCenter,
+                new Vector2(0.15f, 0.38f), new Vector2(0.85f, 0.52f),
+                new Vector2(0f, 0f), new Vector2(0f, 0f));
+            cooldownFlavorText.color = new Color(0.45f, 0.45f, 0.50f);
+            cooldownFlavorText.horizontalOverflow = HorizontalWrapMode.Wrap;
+
             // Disabled "Start Conversation" button
             var disabledBtn = MakeButton(cooldownGroup.transform, "Disabled Start", "Start Conversation",
-                new Vector2(0.5f, 0.3f), new Vector2(0.5f, 0.3f),
+                new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f),
                 new Vector2(0f, 0f), new Vector2(340f, 68f));
             disabledBtn.interactable = false;
             var btnColors = disabledBtn.colors;

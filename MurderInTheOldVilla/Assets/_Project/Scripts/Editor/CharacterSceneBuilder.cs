@@ -77,20 +77,38 @@ namespace MurderVilla.Editor
 
         private static void BuildCharacters(bool forceRebuild)
         {
-            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isPlaying)
                 return;
 
             if (!File.Exists(ScenePath) || !File.Exists(MaleModel) ||
                 !File.Exists(FemaleModel))
                 return;
 
-            Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
-            GameObject existing = FindNamed(CharacterRootName);
-            if (existing != null && !forceRebuild)
+            Scene scene;
+            try
+            {
+                scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            }
+            catch (InvalidOperationException)
+            {
+                // Unity is still transitioning — retry later
+                QueueBuild();
                 return;
+            }
+            GameObject existing = FindNamed(CharacterRootName);
+            Debug.Log($"[CharacterBuilder] Existing '{CharacterRootName}': {(existing != null ? "found" : "null")}, forceRebuild={forceRebuild}");
+
+            if (existing != null && !forceRebuild)
+            {
+                Debug.Log("[CharacterBuilder] Skipping — characters already exist.");
+                return;
+            }
 
             if (existing != null)
+            {
+                Debug.Log("[CharacterBuilder] Destroying existing character root.");
                 UnityEngine.Object.DestroyImmediate(existing);
+            }
 
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             RuntimeAnimatorController controller = CreateIdleController();
@@ -112,16 +130,21 @@ namespace MurderVilla.Editor
                 forward = Vector3.forward;
             Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
 
-            Vector3 amyPosition = FindAnchorPosition("Stairs",
-                playerPosition + forward * 5f + right * 2.5f, false);
-            Vector3 benPosition = FindAnchorPosition("Corridor_2",
-                playerPosition + forward * 10f - right * 2f, false);
-            Vector3 cocoPosition = PlaceOnFloor(playerPosition + forward * 7f - right * 2.4f);
-            Vector3 deanPosition = PlaceOnFloor(playerPosition + forward * 7f + right * 2.4f);
-            Vector3 ellaPosition = FindAnchorPosition("Kitchen",
-                playerPosition + forward * 12f + right * 3f, false);
+            // Hardcoded verified positions from YAML editing
+            Vector3 amyPosition = new Vector3(-14.0f, 0.02f, -4.0f);
+            Vector3 benPosition = new Vector3(-2.0f, 0.02f, -4.0f);
+            Vector3 cocoPosition = new Vector3(-9.0f, 0.02f, -2.0f);
+            Vector3 deanPosition = new Vector3(-12.0f, 3.02f, -18.0f);
+            Vector3 ellaPosition = new Vector3(-4.0f, 3.02f, -5.0f);
             Vector3 felixPosition = FindAnchorPosition("GothicBed",
-                playerPosition + forward * 13f, true);
+                new Vector3(-18.0f, 0.72f, -23.0f), true);
+
+            Debug.Log($"[CharacterBuilder] Placing Amy at {amyPosition}");
+            Debug.Log($"[CharacterBuilder] Placing Ben at {benPosition}");
+            Debug.Log($"[CharacterBuilder] Placing Coco at {cocoPosition}");
+            Debug.Log($"[CharacterBuilder] Placing Dean at {deanPosition}");
+            Debug.Log($"[CharacterBuilder] Placing Ella at {ellaPosition}");
+            Debug.Log($"[CharacterBuilder] Placing Felix at {felixPosition}");
 
             CreateCharacter(root.transform, "Amy", female, HairModels[0], amyPosition,
                 0.98f, new Color(0.46f, 0.18f, 0.20f), controller, true,
@@ -154,7 +177,7 @@ namespace MurderVilla.Editor
                             },
                             new QAPair
                             {
-                                question = "Dean's birthday cake seemed to be cut pretty late. Do you remember what was prepared that night?",
+                                question = "Felix's birthday cake seemed to be cut pretty late. Do you remember what was prepared that night?",
                                 answer = "...(pause) I don't know. Anyway, I never touched the milk. I had nothing to do with that cup of milk at all.",
                             },
                             new QAPair
@@ -172,8 +195,40 @@ namespace MurderVilla.Editor
                 {
                     new DialogueBranch
                     {
-                        questionText = "What did you see that night?",
-                        responseText = "At 10:10 I passed Felix's bedroom. The bedside lamp was off. I could not see anyone, but I heard a newspaper rustling continuously. I assumed Uncle Felix was still awake and went downstairs.",
+                        questionText = "Why aren't you wearing clothes?",
+                        responseText = "Excuse me? That's none of your business.",
+                    },
+                    new DialogueBranch
+                    {
+                        questionText = "Did you go up to the second floor that night?",
+                        qaSequence = new QAPair[]
+                        {
+                            new QAPair
+                            {
+                                question = "Did you go up to the second floor that night?",
+                                answer = "Yeah, I went up sometime after 22:00 to grab something. I glanced toward the master bedroom door on my way.",
+                            },
+                            new QAPair
+                            {
+                                question = "What time exactly? What did you see?",
+                                answer = "Around 22:18, I think — I wasn't really paying attention to the time. The room was dark, no lights on.",
+                            },
+                            new QAPair
+                            {
+                                question = "Dark? Then how did you know someone was in there?",
+                                answer = "I heard the sound of newspaper pages turning — it kept going, kind of a rustling sound, pretty clear.",
+                            },
+                            new QAPair
+                            {
+                                question = "So you assumed your uncle was still awake?",
+                                answer = "Yeah, I figured he was reading the paper in the dark, or just flipping through it absentmindedly. Didn't think much of it, so I just went downstairs.",
+                            },
+                            new QAPair
+                            {
+                                question = "How long did you stay at the door? Did you knock or call out to him?",
+                                answer = "Just a few seconds. I didn't knock — it was his birthday, so I didn't want to bother him. I figured he probably just wanted some time alone.",
+                            },
+                        },
                     },
                 });
 
@@ -183,8 +238,40 @@ namespace MurderVilla.Editor
                 {
                     new DialogueBranch
                     {
-                        questionText = "Where were you that night?",
-                        responseText = "I was with Dean in the living room from 10:00 until 10:30. I never went upstairs. Dean can confirm that. I had no reason to hurt Felix.",
+                        questionText = "Why aren't you wearing clothes?",
+                        responseText = "How dare you! I'm calling my lawyer.",
+                    },
+                    new DialogueBranch
+                    {
+                        questionText = "Where were you between 22:00 and 22:30 that night?",
+                        qaSequence = new QAPair[]
+                        {
+                            new QAPair
+                            {
+                                question = "Where were you between 22:00 and 22:30 that night?",
+                                answer = "I was in the living room, talking with Dean. We were just chatting.",
+                            },
+                            new QAPair
+                            {
+                                question = "Did you leave the room at any point during that time?",
+                                answer = "No, not once. I didn't go upstairs at all that night.",
+                            },
+                            new QAPair
+                            {
+                                question = "Not even for a moment — to use the restroom, or grab something?",
+                                answer = "No, nothing like that. I was there the whole time — you can ask Dean.",
+                            },
+                            new QAPair
+                            {
+                                question = "How was your relationship with Felix?",
+                                answer = "It was... fine. We didn't always see eye to eye, but that's just family stuff. Nothing serious.",
+                            },
+                            new QAPair
+                            {
+                                question = "Did you touch the curtains in his bedroom recently, for any reason?",
+                                answer = "(slightly defensive) Why would I? I haven't even been in his room in weeks.",
+                            },
+                        },
                     },
                 });
 
@@ -194,8 +281,40 @@ namespace MurderVilla.Editor
                 {
                     new DialogueBranch
                     {
-                        questionText = "What happened that night?",
-                        responseText = "I stayed with Coco all night. At 10:30 I patrolled upstairs. Felix's room was quiet. I assumed he had fallen asleep.",
+                        questionText = "Why aren't you wearing clothes?",
+                        responseText = "...I don't have to answer that. Talk to my lawyer.",
+                    },
+                    new DialogueBranch
+                    {
+                        questionText = "Where were you between 22:00 and 22:30 that night?",
+                        qaSequence = new QAPair[]
+                        {
+                            new QAPair
+                            {
+                                question = "Where were you between 22:00 and 22:30 that night?",
+                                answer = "I was in the living room, with Coco. We talked for a while.",
+                            },
+                            new QAPair
+                            {
+                                question = "Did either of you leave the room?",
+                                answer = "No. We were both there the whole time.",
+                            },
+                            new QAPair
+                            {
+                                question = "Did you check on Felix at any point?",
+                                answer = "I went up to patrol around 22:30, like I always do.",
+                            },
+                            new QAPair
+                            {
+                                question = "What did you find?",
+                                answer = "Everything was quiet. I assumed he'd gone to sleep, so I didn't go in.",
+                            },
+                            new QAPair
+                            {
+                                question = "Is there anything else you remember from that night — anything unusual?",
+                                answer = "(hesitates) No... nothing unusual. It was a normal night.",
+                            },
+                        },
                     },
                 });
 
@@ -205,8 +324,40 @@ namespace MurderVilla.Editor
                 {
                     new DialogueBranch
                     {
-                        questionText = "What did you do that night?",
-                        responseText = "I finished cleaning the second floor at 9:45 and prepared warm milk. I saw someone hurry away near the stairs, but I could not identify them. I delivered the milk at 10:00. Felix was reading with the lamp on. After that, I remained in the kitchen.",
+                        questionText = "Why aren't you wearing clothes?",
+                        responseText = "Excuse me?! I'm the housekeeper, not a suspect. Show some respect.",
+                    },
+                    new DialogueBranch
+                    {
+                        questionText = "What were you doing around 21:45 that night?",
+                        qaSequence = new QAPair[]
+                        {
+                            new QAPair
+                            {
+                                question = "What were you doing around 21:45 that night?",
+                                answer = "I'd just finished cleaning the second floor, and went down to the kitchen to warm up some milk for Felix.",
+                            },
+                            new QAPair
+                            {
+                                question = "Did you notice anything unusual on your way down?",
+                                answer = "There was someone near the staircase, moving pretty fast. I couldn't tell who it was — just a quick shape passing by.",
+                            },
+                            new QAPair
+                            {
+                                question = "What time did you deliver the milk?",
+                                answer = "Right at 22:00. Felix was sitting up, reading the newspaper, lamp was on. Looked completely normal.",
+                            },
+                            new QAPair
+                            {
+                                question = "Did you go back upstairs after that?",
+                                answer = "No, I stayed in the kitchen the rest of the night, cleaning up.",
+                            },
+                            new QAPair
+                            {
+                                question = "Did you see anyone else go upstairs after you came down?",
+                                answer = "No, I didn't see anyone. I was busy in the kitchen — wasn't really watching the stairs.",
+                            },
+                        },
                     },
                 });
 
@@ -221,6 +372,12 @@ namespace MurderVilla.Editor
                         responseText = "The curtain-cord marks indicate mechanical strangulation. There are no signs that Felix willingly tightened the cord himself.",
                     },
                 });
+            felix.GetComponent<NPCDialogue>().SetMonologue(
+                "It was my birthday that night. When Ella brought up the milk, I was sitting up in bed reading the newspaper, lamp on, everything normal.\n\n" +
+                "I remember taking a few sips of the milk. It tasted a little off, but I didn't think much of it — it was my birthday, after all.\n\n" +
+                "Then... my body started feeling heavy. The newspaper slipped out of my hands. My eyelids kept getting heavier, and I couldn't keep them open no matter what. The room started to blur, and the sounds around me felt far away, distant.\n\n" +
+                "I tried to call out, but no sound came.\n\n" +
+                "Then... nothing. Just darkness.");
             Transform felixVisual = felix.transform.Find("Visual");
             if (felixVisual != null)
             {
@@ -231,6 +388,7 @@ namespace MurderVilla.Editor
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene, ScenePath);
             AssetDatabase.SaveAssets();
+            Debug.Log($"[CharacterBuilder] Scene saved. Root '{CharacterRootName}' child count: {root.transform.childCount}");
             Debug.Log("Added Amy, Ben, Coco, Dean, Ella and Felix with dialogue and idle motion.");
         }
 
@@ -443,11 +601,11 @@ namespace MurderVilla.Editor
         {
             GameObject anchor = FindClosestNamed(objectName, fallback);
             if (anchor == null)
-                return PlaceOnFloor(fallback);
+                return fallback; // Use verified coordinates directly
 
             Renderer[] renderers = anchor.GetComponentsInChildren<Renderer>(true);
             if (renderers.Length == 0)
-                return PlaceOnFloor(anchor.transform.position);
+                return fallback;
 
             Bounds bounds = renderers[0].bounds;
             foreach (Renderer renderer in renderers.Skip(1))
