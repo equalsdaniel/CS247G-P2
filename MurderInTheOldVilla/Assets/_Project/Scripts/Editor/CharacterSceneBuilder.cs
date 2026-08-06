@@ -46,6 +46,10 @@ namespace MurderVilla.Editor
         [MenuItem("Murder in Old Villa/Add Story Characters (ABCDEF)")]
         public static void BuildFromMenu()
         {
+            Debug.Log("[CharacterBuilder] Menu command received. isPlaying=" +
+                EditorApplication.isPlayingOrWillChangePlaymode +
+                " isCompiling=" + EditorApplication.isCompiling +
+                " isUpdating=" + EditorApplication.isUpdating);
             BuildCharacters(true);
         }
 
@@ -73,6 +77,9 @@ namespace MurderVilla.Editor
 
         private static void BuildCharacters(bool forceRebuild)
         {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                return;
+
             if (!File.Exists(ScenePath) || !File.Exists(MaleModel) ||
                 !File.Exists(FemaleModel))
                 return;
@@ -118,57 +125,101 @@ namespace MurderVilla.Editor
 
             CreateCharacter(root.transform, "Amy", female, HairModels[0], amyPosition,
                 0.98f, new Color(0.46f, 0.18f, 0.20f), controller, true,
-                new[]
+                new DialogueBranch[]
                 {
-                    "Felix and I argued sometimes, but I stayed downstairs after 10:00.",
-                    "I passed the master bedroom around 9:50. I never entered it.",
-                    "And I never touched the milk at all.",
+                    new DialogueBranch
+                    {
+                        questionText = "Why aren't you wearing clothes?",
+                        responseText = "That's very rude of you to ask.",
+                    },
+                    new DialogueBranch
+                    {
+                        questionText = "Where were you around 21:50 that night?",
+                        qaSequence = new QAPair[]
+                        {
+                            new QAPair
+                            {
+                                question = "Where were you around 21:50 that night?",
+                                answer = "I passed by the master bedroom door and went straight to the living room. I didn't stay long.",
+                            },
+                            new QAPair
+                            {
+                                question = "What do you mean by \"passed by\"? Did you go inside?",
+                                answer = "No, I never went into that room. I didn't go in there once that whole night.",
+                            },
+                            new QAPair
+                            {
+                                question = "Okay, so you stayed in the living room after that?",
+                                answer = "Yes, I didn't go back upstairs after returning to the living room. I didn't go up to the second floor at all after 22:00 — not once.",
+                            },
+                            new QAPair
+                            {
+                                question = "Dean's birthday cake seemed to be cut pretty late. Do you remember what was prepared that night?",
+                                answer = "...(pause) I don't know. Anyway, I never touched the milk. I had nothing to do with that cup of milk at all.",
+                            },
+                            new QAPair
+                            {
+                                question = "(frowns slightly, doesn't press about the milk) ...Alright. Did you see Coco that night?",
+                                answer = "We didn't really cross paths that night. I think she was in the living room talking with Felix the whole time — I wasn't really paying attention.",
+                            },
+                        },
+                    },
                 });
 
             CreateCharacter(root.transform, "Ben", male, HairModels[1], benPosition,
                 1.02f, new Color(0.16f, 0.26f, 0.38f), controller, true,
-                new[]
+                new DialogueBranch[]
                 {
-                    "At 10:10 I passed Felix's bedroom. The bedside lamp was off.",
-                    "I could not see anyone, but I heard a newspaper rustling continuously.",
-                    "I assumed Uncle Felix was still awake and went downstairs.",
+                    new DialogueBranch
+                    {
+                        questionText = "What did you see that night?",
+                        responseText = "At 10:10 I passed Felix's bedroom. The bedside lamp was off. I could not see anyone, but I heard a newspaper rustling continuously. I assumed Uncle Felix was still awake and went downstairs.",
+                    },
                 });
 
             CreateCharacter(root.transform, "Coco", female, HairModels[2], cocoPosition,
                 1.01f, new Color(0.24f, 0.15f, 0.34f), controller, true,
-                new[]
+                new DialogueBranch[]
                 {
-                    "I was with Dean in the living room from 10:00 until 10:30.",
-                    "I never went upstairs. Dean can confirm that.",
-                    "I had no reason to hurt Felix.",
+                    new DialogueBranch
+                    {
+                        questionText = "Where were you that night?",
+                        responseText = "I was with Dean in the living room from 10:00 until 10:30. I never went upstairs. Dean can confirm that. I had no reason to hurt Felix.",
+                    },
                 });
 
             CreateCharacter(root.transform, "Dean", male, HairModels[3], deanPosition,
                 1.04f, new Color(0.15f, 0.28f, 0.22f), controller, true,
-                new[]
+                new DialogueBranch[]
                 {
-                    "I stayed with Coco all night.",
-                    "At 10:30 I patrolled upstairs. Felix's room was quiet.",
-                    "I assumed he had fallen asleep.",
+                    new DialogueBranch
+                    {
+                        questionText = "What happened that night?",
+                        responseText = "I stayed with Coco all night. At 10:30 I patrolled upstairs. Felix's room was quiet. I assumed he had fallen asleep.",
+                    },
                 });
 
             CreateCharacter(root.transform, "Ella", female, HairModels[4], ellaPosition,
                 0.96f, new Color(0.42f, 0.36f, 0.22f), controller, true,
-                new[]
+                new DialogueBranch[]
                 {
-                    "I finished cleaning the second floor at 9:45 and prepared warm milk.",
-                    "I saw someone hurry away near the stairs, but I could not identify them.",
-                    "I delivered the milk at 10:00. Felix was reading with the lamp on.",
-                    "After that, I remained in the kitchen.",
+                    new DialogueBranch
+                    {
+                        questionText = "What did you do that night?",
+                        responseText = "I finished cleaning the second floor at 9:45 and prepared warm milk. I saw someone hurry away near the stairs, but I could not identify them. I delivered the milk at 10:00. Felix was reading with the lamp on. After that, I remained in the kitchen.",
+                    },
                 });
 
             GameObject felix = CreateCharacter(root.transform, "Felix", male,
                 HairModels[5], felixPosition, 1.05f, new Color(0.22f, 0.22f, 0.24f),
                 null, false,
-                new[]
+                new DialogueBranch[]
                 {
-                    "The curtain-cord marks indicate mechanical strangulation.",
-                    "There are no signs that Felix willingly tightened the cord himself.",
+                    new DialogueBranch
+                    {
+                        questionText = "Examine the body",
+                        responseText = "The curtain-cord marks indicate mechanical strangulation. There are no signs that Felix willingly tightened the cord himself.",
+                    },
                 });
             Transform felixVisual = felix.transform.Find("Visual");
             if (felixVisual != null)
@@ -186,7 +237,7 @@ namespace MurderVilla.Editor
         private static GameObject CreateCharacter(Transform parent, string characterName,
             GameObject bodyPrefab, string hairFile, Vector3 position, float heightScale,
             Color accent, RuntimeAnimatorController controller, bool animate,
-            string[] dialogue)
+            DialogueBranch[] dialogue)
         {
             GameObject character = new($"NPC {characterName}");
             character.transform.SetParent(parent);
@@ -421,8 +472,7 @@ namespace MurderVilla.Editor
 
         private static GameObject FindClosestNamed(string name, Vector3 near)
         {
-            return UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsInactive.Include,
-                    FindObjectsSortMode.None)
+            return UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsInactive.Include)
                 .Where(candidate => candidate.name == name)
                 .OrderBy(candidate => (candidate.position - near).sqrMagnitude)
                 .Select(candidate => candidate.gameObject)
@@ -431,8 +481,7 @@ namespace MurderVilla.Editor
 
         private static GameObject FindNamed(string name)
         {
-            return UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsInactive.Include,
-                    FindObjectsSortMode.None)
+            return UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsInactive.Include)
                 .FirstOrDefault(candidate => candidate.name == name)?.gameObject;
         }
 

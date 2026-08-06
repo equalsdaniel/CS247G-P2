@@ -6,9 +6,12 @@ namespace MurderVilla.Dialogue
     public sealed class NPCDialogue : MonoBehaviour, IInteractable
     {
         [SerializeField] private string characterName;
-        [SerializeField, TextArea(2, 5)] private string[] lines;
+        [SerializeField] private DialogueBranch[] branches;
         [SerializeField] private bool canTalk = true;
         [SerializeField] private NPCIdleMotion idleMotion;
+
+        public string CharacterName => characterName;
+        public DialogueBranch[] Branches => branches;
 
         public string InteractionPrompt => canTalk
             ? $"Talk to {characterName} [E]"
@@ -18,10 +21,9 @@ namespace MurderVilla.Dialogue
 
         public void Interact()
         {
-            if (DialogueManager.Instance == null)
-                return;
+            if (DialogueManager.Instance == null) return;
 
-            DialogueManager.Instance.Begin(this, characterName, lines);
+            DialogueManager.Instance.Begin(this);
         }
 
         public void SetTalking(bool talking)
@@ -30,11 +32,14 @@ namespace MurderVilla.Dialogue
                 idleMotion.SetTalking(talking);
         }
 
-        public void Configure(string displayName, string[] dialogueLines,
+        /// <summary>
+        /// Called by CharacterSceneBuilder to populate dialogue data at edit time.
+        /// </summary>
+        public void Configure(string displayName, DialogueBranch[] dialogueBranches,
             NPCIdleMotion motion, bool dialogueEnabled = true)
         {
             characterName = displayName;
-            lines = dialogueLines;
+            branches = dialogueBranches;
             idleMotion = motion;
             canTalk = dialogueEnabled;
         }
