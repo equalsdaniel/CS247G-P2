@@ -56,6 +56,56 @@ function checkerTexture() {
   return texture;
 }
 
+const clueWorldPositions: Record<string, [number, number, number]> = {
+  milk: [4.65, 1.08, -2.4], clock: [-7.23, .05, -.18], log: [5.7, 1.47, 4.02],
+  paper: [5.45, .88, -2.2], cord: [8.02, 1.15, -2.1], lock: [2.22, 1.18, -.35],
+};
+
+function clueMaterial(color: number, emissive = 0) {
+  return new THREE.MeshStandardMaterial({ color, emissive, emissiveIntensity: emissive ? .35 : 0, roughness: 1, flatShading: true });
+}
+
+function makeClueModel(id: string) {
+  const group = new THREE.Group();
+  const add = (geometry: THREE.BufferGeometry, material: THREE.Material, position: [number,number,number], rotation?: [number,number,number]) => {
+    const mesh = new THREE.Mesh(geometry, material); mesh.position.set(...position); if(rotation)mesh.rotation.set(...rotation); mesh.castShadow=true; group.add(mesh); return mesh;
+  };
+  if (id === "milk") {
+    add(new THREE.CylinderGeometry(.28,.3,.055,12),clueMaterial(0xe8d9bb),[0,0,0]);
+    add(new THREE.CylinderGeometry(.19,.16,.34,10),clueMaterial(0xf1e5ca),[0,.19,0]);
+    add(new THREE.CylinderGeometry(.145,.145,.018,12),clueMaterial(0xe9dfc4,0x8b7148),[0,.365,0]);
+    add(new THREE.TorusGeometry(.16,.035,6,10,Math.PI*1.55),clueMaterial(0xf1e5ca),[.18,.22,0],[Math.PI/2,0,Math.PI/2]);
+  } else if (id === "clock") {
+    add(new THREE.BoxGeometry(.52,1.55,.32),clueMaterial(0x80593b),[0,.78,0]);
+    add(new THREE.CylinderGeometry(.22,.22,.045,12),clueMaterial(0xe8d9a9),[0,1.17,-.18],[Math.PI/2,0,0]);
+    add(new THREE.BoxGeometry(.025,.16,.025),clueMaterial(0x382b26),[0,1.19,-.22],[0,0,.6]);
+    add(new THREE.BoxGeometry(.025,.12,.025),clueMaterial(0x382b26),[.03,1.13,-.22],[0,0,-.7]);
+    add(new THREE.CylinderGeometry(.04,.04,.42,8),clueMaterial(0xc59b52),[0,.58,-.2]);
+    add(new THREE.SphereGeometry(.09,8,6),clueMaterial(0xc59b52),[0,.34,-.2]);
+  } else if (id === "log") {
+    add(new THREE.BoxGeometry(.78,.055,.56),clueMaterial(0x604934),[0,0,0]);
+    add(new THREE.BoxGeometry(.68,.025,.47),clueMaterial(0xe8dfc8),[0,.04,0]);
+    add(new THREE.BoxGeometry(.2,.05,.08),clueMaterial(0x485d63),[0,.075,-.22]);
+    for(let i=0;i<4;i++) add(new THREE.BoxGeometry(.5,.012,.018),clueMaterial(0x6d6255),[0,.065,-.11+i*.11]);
+  } else if (id === "paper") {
+    add(new THREE.BoxGeometry(.78,.025,.56),clueMaterial(0xeee2c4),[0,0,0],[0,.18,0]);
+    add(new THREE.BoxGeometry(.7,.018,.5),clueMaterial(0xdccda9),[.06,.025,.03],[0,-.08,0]);
+    for(let i=0;i<5;i++) add(new THREE.BoxGeometry(.52,.012,.015),clueMaterial(0x6a6158),[.03,.04,-.17+i*.085],[0,-.08,0]);
+  } else if (id === "cord") {
+    add(new THREE.TorusGeometry(.3,.035,6,14),clueMaterial(0xc7a06c),[0,.28,0],[0,Math.PI/2,0]);
+    add(new THREE.CylinderGeometry(.055,.055,.72,7),clueMaterial(0xc7a06c),[0,-.12,0]);
+    add(new THREE.CylinderGeometry(.13,.13,.11,10),clueMaterial(0x76513e),[0,.62,0],[Math.PI/2,0,0]);
+  } else if (id === "lock") {
+    add(new THREE.BoxGeometry(.42,.62,.15),clueMaterial(0xb8a06d),[0,0,0]);
+    add(new THREE.CylinderGeometry(.11,.11,.15,10),clueMaterial(0x6b573b),[0,.08,-.13],[Math.PI/2,0,0]);
+    add(new THREE.BoxGeometry(.045,.15,.025),clueMaterial(0x2f2925),[0,-.15,-.09]);
+  }
+  const marker = add(new THREE.OctahedronGeometry(.065),clueMaterial(0xffd367,0xc87817),[0,id === "clock" ? 1.75 : .72,0]);
+  marker.userData.marker = true; marker.userData.baseY = marker.position.y;
+  const glow = new THREE.PointLight(0xffc35f,2.8,2.2); glow.position.y=id === "clock" ? 1.1 : .4; group.add(glow);
+  return group;
+}
+
 function buildHouse(scene: THREE.Scene, floor: Floor, lang: Lang) {
   const floorMesh = box(scene, [0, -.08, 0], [17.6, .16, 10.8], 0xffffff);
   floorMesh.material = new THREE.MeshStandardMaterial({ map: checkerTexture(), roughness: 1, flatShading: true });
@@ -161,9 +211,9 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
       const label = labelSprite(actor.name); label.position.y = 2.28; group.add(label); scene.add(group); interactive.push(group);
     });
     clues.filter(c => c.floor === floor && !found.includes(c.id)).forEach(clue => {
-      const p = toWorld(clue); const group = new THREE.Group(); group.position.set(p.x, .55, p.z); group.userData = { kind: "clue", id: clue.id, label: lang === "zh" ? clue.name : (clueNamesEn[clue.id] || clue.name) };
-      const orb = new THREE.Mesh(new THREE.OctahedronGeometry(.18), new THREE.MeshStandardMaterial({ color: 0xd7a34c, emissive: 0x6b4614, emissiveIntensity: 1.4 })); group.add(orb);
-      const glow = new THREE.PointLight(0xd99f43, 2.2, 2.5); group.add(glow); scene.add(group); interactive.push(group);
+      const group = makeClueModel(clue.id); const position=clueWorldPositions[clue.id] || [toWorld(clue).x,.55,toWorld(clue).z]; group.position.set(...position);
+      group.userData = { kind: "clue", id: clue.id, label: lang === "zh" ? clue.name : (clueNamesEn[clue.id] || clue.name) };
+      scene.add(group); interactive.push(group);
     });
     const stairs = new THREE.Group(); stairs.position.set(0, .5, 3.75); stairs.userData = { kind: "stairs", id: "stairs", label: floor === 1 ? (lang === "zh" ? "前往二楼" : "Go Upstairs") : (lang === "zh" ? "返回一楼" : "Go Downstairs") };
     const stairMarker = new THREE.Mesh(new THREE.ConeGeometry(.24, .6, 4), new THREE.MeshStandardMaterial({ color: 0xc79c54, emissive: 0x4d3517 })); stairMarker.rotation.z = floor === 1 ? 0 : Math.PI; stairs.add(stairMarker); scene.add(stairs); interactive.push(stairs);
@@ -184,7 +234,7 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
       if(move.lengthSq()){move.normalize().multiplyScalar(speed); const next=camera.position.clone().add(move); next.x=THREE.MathUtils.clamp(next.x,-8.25,8.25); next.z=THREE.MathUtils.clamp(next.z,-4.85,4.85); camera.position.copy(next);}
       camera.rotation.set(0,stateRef.current.yaw,0,"YXZ");
       if(clock.elapsedTime-lastMapUpdate>.08){lastMapUpdate=clock.elapsedTime;const mapped=toMap(camera.position);setMiniPlayer(mapped);setMiniYaw(stateRef.current.yaw);setPlayer(mapped);}
-      interactive.forEach((o,i)=>{ if(o.userData.kind==="clue") o.rotation.y += dt*1.5; if(o.userData.kind==="stairs") o.position.y=.5+Math.sin(clock.elapsedTime*2)*.08; });
+      interactive.forEach(o=>{ if(o.userData.kind==="clue"){const marker=o.children.find(child=>child.userData.marker);if(marker){marker.rotation.y+=dt*2;marker.position.y=marker.userData.baseY+Math.sin(clock.elapsedTime*3)*.05;}} if(o.userData.kind==="stairs") o.position.y=.5+Math.sin(clock.elapsedTime*2)*.08; });
       raycaster.setFromCamera(center,camera); const hits=raycaster.intersectObjects(interactive,true); let chosen:null|THREE.Object3D=null;
       for(const hit of hits){let root:THREE.Object3D|null=hit.object;while(root&& !root.userData.kind)root=root.parent;if(root&&camera.position.distanceTo(root.position)<2.65){chosen=root;break;}}
       if(!chosen){let best=2.0;interactive.forEach(o=>{const d=camera.position.distanceTo(o.position);if(d<best){best=d;chosen=o;}});}
