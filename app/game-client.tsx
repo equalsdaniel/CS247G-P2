@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type Floor = 1 | 2;
+type Lang = "zh" | "en";
 type Point = { x: number; y: number };
 type Actor = Point & { id: string; name: string; room: string; color: string; floor: Floor };
 type Clue = Point & { id: string; name: string; detail: string; floor: Floor };
@@ -116,6 +117,100 @@ const memoryScripts: Record<string, { title: string; tone: string; steps: [strin
   },
 };
 
+const dialogueEn: Record<string, Dialogue[]> = {
+  amy: [
+    { speaker: "Amy", text: "I passed the master bedroom around 9:50 and went back to the living room. I never touched that milk." },
+    { speaker: "Amy", text: "Anyone could enter the kitchen. You should question the person who prepared the milk." },
+  ],
+  coco: [
+    { speaker: "Coco", text: "I was in the living room with Dean from 10:00 to 10:30. I never went upstairs." },
+    { speaker: "Coco", text: "The curtains? I haven't entered Felix's room for weeks." },
+  ],
+  dean: [
+    { speaker: "Dean", text: "Coco and I were in the living room. I made my usual patrol at 10:30. The room was quiet." },
+    { speaker: "Dean", text: "The cameras are old. Repeated footage does not necessarily mean it was altered." },
+  ],
+  ben: [
+    { speaker: "Ben", text: "I passed the bedroom around 10:18. The lights were off, but I kept hearing newspaper pages." },
+    { speaker: "Ben", text: "I didn't knock. I owed Felix money... I was afraid to face him." },
+  ],
+  ella: [
+    { speaker: "Ella", text: "I started warming the milk at 9:45 and delivered it at 10:00. I went into the pantry for a tray." },
+    { speaker: "Ella", text: "When I returned, I saw a gray-green sleeve disappear through the dining-room door." },
+  ],
+};
+
+const memoryScriptsEn: typeof memoryScripts = {
+  felix: { title: "The Last Five Conscious Minutes", tone: "#50483e", steps: [
+    ["22:00 · Master Bedroom", "Ella sets the warm milk beside the bed. The lamp is on and today's paper is open in Felix's hands.", "▤", "Pick up the cup"],
+    ["22:03 · Bedside", "The milk tastes faintly bitter. Felix pauses, then takes a second sip.", "◒", "Put down the cup"],
+    ["22:07 · Master Bedroom", "The paper slips from his hands. The print doubles and every sound recedes.", "≋", "Try to call out"],
+    ["22:10 · Darkness", "His arms will not move. The memory ends before the bedroom door opens again.", "●", "End residual memory"],
+  ]},
+  amy: { title: "The Missing Kitchen", tone: "#485f51", steps: [
+    ["21:46 · Dining-Room Door", "Amy watches Ella pour the milk through the half-open door.", "◩", "Keep watching"],
+    ["21:48 · Kitchen", "The pantry door closes. Only the stove can be heard beside the unattended cup.", "♨", "Approach the cup"],
+    ["21:48 · Worktop", "A hand lifts the cup. White light erases the label on a medicine bottle.", "◒", "Touch the blank space"],
+    ["21:49 · Dining Room", "A button is missing from a gray-green cuff. The kitchen door closes behind it.", "◐", "Leave memory"],
+  ]},
+  coco: { title: "The Missing Seven Minutes", tone: "#69434d", steps: [
+    ["22:14 · Living Room", "Dean gets up to deal with the breaker. The clock's second hand keeps moving.", "◷", "Wait"],
+    ["22:15 · Foyer", "The memory jumps to the stairs. There was no sound of the living-room door closing.", "⇧", "Go upstairs"],
+    ["22:18 · Master Bedroom", "The room is dark. A curtain pulley scrapes, and an old newspaper is lifted beside the fireplace.", "▤", "Listen"],
+    ["22:22 · Living Room", "The glass has not moved, but the clock has advanced seven minutes.", "◷", "Leave memory"],
+  ]},
+  dean: { title: "The Repeating Thirteen Seconds", tone: "#465264", steps: [
+    ["22:12 · Monitor Room", "The east circuit trips. All three camera feeds flicker at once.", "▦", "Check the screens"],
+    ["22:15 · Camera Feed", "The same laugh and the same movement of Coco's hand repeat perfectly.", "↻", "Replay footage"],
+    ["22:22 · File List", "A recording is copied before the main file is replaced by a thirteen-second loop.", "▣", "Check the time"],
+    ["22:25 · Side Hall", "Dean holds a memory card and looks toward the laundry-room door.", "▪", "Leave memory"],
+  ]},
+  ben: { title: "Paper in the Dark", tone: "#554c70", steps: [
+    ["22:17 · Guest Room", "Ben retrieves his headphones. The device is still recording the hallway.", "◉", "Return to the hall"],
+    ["22:18 · Bedroom Door", "No light shows beneath the door, yet paper continues to rustle inside.", "▤", "Move closer"],
+    ["22:19 · Outside the Door", "Between thunderclaps comes a metal pulley scrape, followed by two footsteps.", "≋", "Separate the sounds"],
+    ["22:20 · Stairway", "The paper sound stops. Ben does not knock and walks downstairs.", "⇩", "Leave memory"],
+  ]},
+  ella: { title: "Three Minutes Unattended", tone: "#806844", steps: [
+    ["21:45 · Kitchen", "Ella lights the stove and pours the warmed milk into a cup.", "♨", "Find the tray"],
+    ["21:48 · Pantry", "The kitchen door moves, followed by glass touching the worktop.", "◫", "Look through the gap"],
+    ["21:49 · Kitchen", "A gray-green sleeve disappears. Two water rings now mark different positions on the tray.", "◒", "Lift the tray"],
+    ["22:00 · Master Bedroom", "Felix takes the milk. The lamp is on and today's newspaper is open in his hands.", "▤", "Leave memory"],
+  ]},
+};
+
+const clueEn: Record<string, { name: string; detail: string }> = {
+  milk: { name: "Milk Cup", detail: "A pale residue remains at the bottom. Ella's memory may reveal when it was added." },
+  clock: { name: "Living-Room Clock", detail: "The clock stopped once. Coco's memory jumps from 22:14 to 22:22." },
+  log: { name: "Breaker Log", detail: "At 22:12 Dean left the living room, creating a gap in Coco's alibi." },
+  paper: { name: "Flat Newspaper", detail: "Today's paper lies flat and could not have made the continuous sound Ben heard." },
+  cord: { name: "Curtain Cord", detail: "The pulley has fresh wear and a trace of Coco's usual hand cream." },
+  lock: { name: "Automatic Lock", detail: "The door locks when closed. The killer did not need to lock it from inside." },
+};
+
+const ui = {
+  zh: {
+    title: "别墅谋杀案", summary: "暴雨封锁了山路。Felix死在自动上锁的主卧里，五名仍留在别墅中的人各自隐瞒了一段记忆。", enter: "进入别墅",
+    controls: "WASD / 方向键移动 · 靠近目标按 E 或 Enter 互动", evidence: "物证", witnesses: "证人", memories: "记忆", restart: "重新开始", board: "打开案件板",
+    help: "移动到目标附近，或直接点击人物 / 金色物证 / 楼梯", up: "前往二楼", down: "返回一楼", investigate: "调查", talkPrefix: "与", talkSuffix: "对话", inspectFelix: "检查Felix",
+    continue: "继续询问", endTalk: "结束对话", enterMemory: "进入", replayMemory: "重看", possessiveMemory: "的记忆", exitMemory: "退出记忆", memoryRecorded: "的记忆已记录",
+    investigator: "调查员 Mara", footer: "WASD移动 · E互动 · 楼层按钮切换楼层", found: "获得物证：", caseBoard: "案件板", reconstruct: "重建别墅谋杀案", experienced: "已体验记忆",
+    unknown: "未发现", keepExploring: "继续探索别墅", drugQuestion: "谁给牛奶下药？", killerQuestion: "谁实施勒杀？", roomQuestion: "密室如何形成？", choose: "请选择",
+    autoLock: "门关闭后自动锁止", secret: "凶手从密道离开", inside: "死者从内部反锁", submit: "提交最终推理", needMore: "需要询问所有人、体验六段记忆并找到至少5项物证",
+    finalTruth: "完整真相", wrong: "推理仍有矛盾", goodEnding: "Amy利用Ella离开的空隙给牛奶下药。Coco在Felix昏迷后上楼，用窗帘绳将他勒死，再借自动门锁制造密室。黑暗中的报纸声只是伪造死亡时间的表演。", badEnding: "现有证据无法支持你的结论。回到别墅，重新比较牛奶、报纸声和自动门锁。", returnExplore: "返回别墅自由探索", continueInvestigation: "继续调查",
+  },
+  en: {
+    title: "Murder at the Old Villa", summary: "A storm has cut off the mountain road. Felix is dead in an automatically locked bedroom, and each of the five people still inside is hiding part of a memory.", enter: "Enter the Villa",
+    controls: "Move with WASD / arrow keys · Press E or Enter near a target", evidence: "Evidence", witnesses: "Witnesses", memories: "Memories", restart: "Restart", board: "Case Board",
+    help: "Move near a target, or click a person, gold evidence marker, or the stairs", up: "Go Upstairs", down: "Go Downstairs", investigate: "Investigate", talkPrefix: "Talk to ", talkSuffix: "", inspectFelix: "Inspect Felix",
+    continue: "Continue", endTalk: "End Conversation", enterMemory: "Enter ", replayMemory: "Replay ", possessiveMemory: "'s Memory", exitMemory: "Exit Memory", memoryRecorded: "'s memory recorded",
+    investigator: "Investigator Mara", footer: "WASD to move · E to interact · floor button to change floors", found: "Evidence found: ", caseBoard: "CASE 07 · CASE BOARD", reconstruct: "Reconstruct the Villa Murder", experienced: "Memories viewed",
+    unknown: "Undiscovered", keepExploring: "Keep exploring the villa", drugQuestion: "Who drugged the milk?", killerQuestion: "Who strangled Felix?", roomQuestion: "How was the locked room created?", choose: "Choose",
+    autoLock: "The door locked automatically", secret: "The killer used a secret passage", inside: "Felix locked it from inside", submit: "Submit Final Deduction", needMore: "Question everyone, view all six memories, and find at least five pieces of evidence",
+    finalTruth: "The Complete Truth", wrong: "The Deduction Contradicts the Evidence", goodEnding: "Amy drugged the milk while Ella was away. After Felix lost consciousness, Coco went upstairs, strangled him with the curtain cord, and used the automatic lock to create a false locked room. The newspaper sound only disguised the time of death.", badEnding: "The evidence does not support this conclusion. Return to the villa and compare the milk, the newspaper sound, and the automatic lock.", returnExplore: "Return to Free Exploration", continueInvestigation: "Continue Investigating",
+  },
+};
+
 function dist(a: Point, b: Point) {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
@@ -133,12 +228,14 @@ function drawRoom(ctx: CanvasRenderingContext2D, x: number, y: number, w: number
 
 function MansionCanvas({
   floor,
+  lang,
   player,
   setPlayer,
   found,
   onInteract,
 }: {
   floor: Floor;
+  lang: Lang;
   player: Point;
   setPlayer: (p: Point) => void;
   found: string[];
@@ -155,11 +252,11 @@ function MansionCanvas({
   const nearest = useMemo(() => {
     const available = [
       ...actors.filter((a) => a.floor === floor).map((a) => ({ kind: "actor" as const, id: a.id, name: a.name, p: a })),
-      ...clues.filter((c) => c.floor === floor && !found.includes(c.id)).map((c) => ({ kind: "clue" as const, id: c.id, name: c.name, p: c })),
-      { kind: "stairs" as const, id: "stairs", name: floor === 1 ? "上二楼" : "下一楼", p: { x: 470, y: 505 } },
+      ...clues.filter((c) => c.floor === floor && !found.includes(c.id)).map((c) => ({ kind: "clue" as const, id: c.id, name: lang === "zh" ? c.name : clueEn[c.id].name, p: c })),
+      { kind: "stairs" as const, id: "stairs", name: floor === 1 ? ui[lang].up : ui[lang].down, p: { x: 470, y: 505 } },
     ].sort((a, b) => dist(player, a.p) - dist(player, b.p));
     return nearestOrNull(available, player);
-  }, [floor, player, found]);
+  }, [floor, player, found, lang]);
   nearestRef.current = nearest;
 
   const interact = useCallback(() => {
@@ -245,18 +342,18 @@ function MansionCanvas({
     ctx.fillRect(0, 0, MAP_W, MAP_H);
 
     if (floor === 1) {
-      drawRoom(ctx, 45, 80, 270, 190, "客厅 LIVING ROOM");
-      drawRoom(ctx, 335, 80, 220, 190, "餐厅 DINING ROOM");
-      drawRoom(ctx, 575, 80, 335, 190, "厨房 KITCHEN");
-      drawRoom(ctx, 45, 290, 270, 230, "门厅 FOYER");
-      drawRoom(ctx, 335, 290, 220, 230, "主楼梯 GRAND STAIR");
-      drawRoom(ctx, 575, 290, 335, 230, "管家室 / 洗衣房");
+      drawRoom(ctx, 45, 80, 270, 190, lang === "zh" ? "客厅 LIVING ROOM" : "LIVING ROOM");
+      drawRoom(ctx, 335, 80, 220, 190, lang === "zh" ? "餐厅 DINING ROOM" : "DINING ROOM");
+      drawRoom(ctx, 575, 80, 335, 190, lang === "zh" ? "厨房 KITCHEN" : "KITCHEN");
+      drawRoom(ctx, 45, 290, 270, 230, lang === "zh" ? "门厅 FOYER" : "FOYER");
+      drawRoom(ctx, 335, 290, 220, 230, lang === "zh" ? "主楼梯 GRAND STAIR" : "GRAND STAIR");
+      drawRoom(ctx, 575, 290, 335, 230, lang === "zh" ? "管家室 / 洗衣房" : "MONITOR / LAUNDRY");
     } else {
-      drawRoom(ctx, 45, 80, 250, 190, "客房 GUEST ROOM");
-      drawRoom(ctx, 315, 80, 240, 400, "二楼走廊 UPPER HALL");
-      drawRoom(ctx, 575, 80, 335, 260, "主卧 MASTER BEDROOM");
-      drawRoom(ctx, 575, 360, 160, 160, "主卫");
-      drawRoom(ctx, 750, 360, 160, 160, "杂物间");
+      drawRoom(ctx, 45, 80, 250, 190, lang === "zh" ? "客房 GUEST ROOM" : "GUEST ROOM");
+      drawRoom(ctx, 315, 80, 240, 400, lang === "zh" ? "二楼走廊 UPPER HALL" : "UPPER HALL");
+      drawRoom(ctx, 575, 80, 335, 260, lang === "zh" ? "主卧 MASTER BEDROOM" : "MASTER BEDROOM");
+      drawRoom(ctx, 575, 360, 160, 160, lang === "zh" ? "主卫" : "BATHROOM");
+      drawRoom(ctx, 750, 360, 160, 160, lang === "zh" ? "杂物间" : "STORAGE");
     }
 
     ctx.fillStyle = "rgba(255,255,255,.025)";
@@ -288,7 +385,7 @@ function MansionCanvas({
       ctx.fillStyle = "#e0c58f";
       ctx.font = "600 11px sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText(`物证 · ${c.name}`, c.x + 13, c.y + 4);
+      ctx.fillText(`${ui[lang].evidence} · ${lang === "zh" ? c.name : clueEn[c.id].name}`, c.x + 13, c.y + 4);
     });
 
     ctx.fillStyle = "rgba(197,155,82,.18)";
@@ -301,7 +398,7 @@ function MansionCanvas({
     ctx.textAlign = "center";
     ctx.fillText(floor === 1 ? "⇧" : "⇩", 470, 480);
     ctx.font = "600 12px sans-serif";
-    ctx.fillText(floor === 1 ? "前往二楼" : "返回一楼", 470, 505);
+    ctx.fillText(floor === 1 ? ui[lang].up : ui[lang].down, 470, 505);
 
     ctx.beginPath();
     ctx.arc(player.x, player.y, PLAYER_R, 0, Math.PI * 2);
@@ -316,15 +413,15 @@ function MansionCanvas({
     vignette.addColorStop(1, "rgba(0,0,0,.45)");
     ctx.fillStyle = vignette;
     ctx.fillRect(0, 0, MAP_W, MAP_H);
-  }, [floor, player, found]);
+  }, [floor, player, found, lang]);
 
   return (
     <div className="map-shell">
-      <canvas ref={canvasRef} onPointerDown={handleCanvasClick} className="mansion-map" aria-label={`别墅${floor}楼探索地图；可以直接点击人物、物证和楼梯`} />
+      <canvas ref={canvasRef} onPointerDown={handleCanvasClick} className="mansion-map" aria-label={lang === "zh" ? `别墅${floor}楼探索地图` : `Villa floor ${floor} exploration map`} />
       <div className="floor-label">{floor}F</div>
-      <button className="floor-switch" onClick={() => onInteract("stairs", "stairs")}>{floor === 1 ? "⇧ 前往二楼" : "⇩ 返回一楼"}</button>
-      <div className="map-help">移动到目标附近，或直接点击人物 / 金色物证 / 楼梯</div>
-      {nearest && <button className="interaction-prompt" onClick={interact}><kbd>E</kbd> {nearest.id === "felix" ? "检查Felix" : <>{nearest.kind === "actor" ? "与" : ""}{nearest.name}{nearest.kind === "actor" ? "对话" : nearest.kind === "clue" ? "调查" : ""}</>}</button>}
+      <button className="floor-switch" onClick={() => onInteract("stairs", "stairs")}>{floor === 1 ? `⇧ ${ui[lang].up}` : `⇩ ${ui[lang].down}`}</button>
+      <div className="map-help">{ui[lang].help}</div>
+      {nearest && <button className="interaction-prompt" onClick={interact}><kbd>E</kbd> {nearest.id === "felix" ? ui[lang].inspectFelix : <>{nearest.kind === "actor" ? ui[lang].talkPrefix : ""}{nearest.name}{nearest.kind === "actor" ? ui[lang].talkSuffix : nearest.kind === "clue" ? ` ${ui[lang].investigate}` : ""}</>}</button>}
     </div>
   );
 }
@@ -334,9 +431,9 @@ function nearestOrNull<T extends { p: Point }>(items: T[], player: Point): T | n
   return items[0];
 }
 
-function CharacterMemory({ characterId, onComplete, onClose }: { characterId: string; onComplete: () => void; onClose: () => void }) {
+function CharacterMemory({ characterId, lang, onComplete, onClose }: { characterId: string; lang: Lang; onComplete: () => void; onClose: () => void }) {
   const [step, setStep] = useState(0);
-  const memory = memoryScripts[characterId];
+  const memory = (lang === "zh" ? memoryScripts : memoryScriptsEn)[characterId];
   const current = memory.steps[step];
   const advance = () => {
     if (step === memory.steps.length - 1) onComplete();
@@ -345,39 +442,39 @@ function CharacterMemory({ characterId, onComplete, onClose }: { characterId: st
   return (
     <div className="memory-screen" style={{ "--memory-tone": memory.tone } as React.CSSProperties}>
       <div className="memory-grain" />
-      <button className="close-button" onClick={onClose}>退出记忆</button>
+      <button className="close-button" onClick={onClose}>{ui[lang].exitMemory}</button>
       <div className={`memory-scene memory-step-${step}`}>
         <p className="eyebrow">{memory.title}</p>
         <div className="memory-time">{current[0]}</div>
         <div className="memory-object" aria-hidden="true">{current[2]}</div>
         <p>{current[1]}</p>
-        <div className="memory-dots" aria-label={`记忆进度 ${step + 1}/${memory.steps.length}`}>{memory.steps.map((_, i) => <span className={i <= step ? "active" : ""} key={i} />)}</div>
+        <div className="memory-dots" aria-label={lang === "zh" ? `记忆进度 ${step + 1}/${memory.steps.length}` : `Memory progress ${step + 1}/${memory.steps.length}`}>{memory.steps.map((_, i) => <span className={i <= step ? "active" : ""} key={i} />)}</div>
         <button className="primary-button" onClick={advance}>{current[3]}</button>
       </div>
     </div>
   );
 }
 
-function VictimPanel({ memoryDone, onMemory, onClose }: { memoryDone: boolean; onMemory: () => void; onClose: () => void }) {
+function VictimPanel({ memoryDone, lang, onMemory, onClose }: { memoryDone: boolean; lang: Lang; onMemory: () => void; onClose: () => void }) {
   return (
     <div className="modal-backdrop victim-backdrop">
       <div className="victim-panel">
-        <button className="close-button" onClick={onClose}>返回主卧</button>
+        <button className="close-button" onClick={onClose}>{lang === "zh" ? "返回主卧" : "Return to Bedroom"}</button>
         <p className="eyebrow">VICTIM · FELIX</p>
-        <h2>检查遗体</h2>
-        <p className="victim-summary">Felix仰卧在床边。窗帘绳缠绕颈部，床头台灯已经关闭，牛奶杯仍放在伸手可及的位置。</p>
+        <h2>{lang === "zh" ? "检查遗体" : "Examine the Body"}</h2>
+        <p className="victim-summary">{lang === "zh" ? "Felix仰卧在床边。窗帘绳缠绕颈部，床头台灯已经关闭，牛奶杯仍放在伸手可及的位置。" : "Felix lies beside the bed with the curtain cord around his neck. The bedside lamp is off, and the milk cup remains within reach."}</p>
         <div className="victim-observations">
-          <div><b>颈部勒痕</b><span>受力方向不符合独自操作留下的痕迹。</span></div>
-          <div><b>右手与报纸</b><span>手指没有油墨摩擦，报纸平整地滑落在床侧。</span></div>
-          <div><b>意识残留</b><span>设备检测到失去意识前约十分钟的短期记忆。</span></div>
+          <div><b>{lang === "zh" ? "颈部勒痕" : "Ligature Mark"}</b><span>{lang === "zh" ? "受力方向不符合独自操作留下的痕迹。" : "The direction of force is inconsistent with self-infliction."}</span></div>
+          <div><b>{lang === "zh" ? "右手与报纸" : "Right Hand and Paper"}</b><span>{lang === "zh" ? "手指没有油墨摩擦，报纸平整地滑落在床侧。" : "There is no ink friction on his fingers. The paper lies flat beside the bed."}</span></div>
+          <div><b>{lang === "zh" ? "意识残留" : "Residual Memory"}</b><span>{lang === "zh" ? "设备检测到失去意识前约十分钟的短期记忆。" : "The reader detects roughly ten minutes of memory before unconsciousness."}</span></div>
         </div>
-        <button className="primary-button" onClick={onMemory}>{memoryDone ? "重看Felix的残留记忆" : "读取Felix的残留记忆"}</button>
+        <button className="primary-button" onClick={onMemory}>{lang === "zh" ? (memoryDone ? "重看Felix的残留记忆" : "读取Felix的残留记忆") : (memoryDone ? "Replay Felix's Residual Memory" : "Read Felix's Residual Memory")}</button>
       </div>
     </div>
   );
 }
 
-function CaseBoard({ found, talked, memoriesDone, onClose, onVerdict }: { found: string[]; talked: string[]; memoriesDone: string[]; onClose: () => void; onVerdict: (good: boolean) => void }) {
+function CaseBoard({ found, talked, memoriesDone, lang, onClose, onVerdict }: { found: string[]; talked: string[]; memoriesDone: string[]; lang: Lang; onClose: () => void; onVerdict: (good: boolean) => void }) {
   const [drug, setDrug] = useState("");
   const [killer, setKiller] = useState("");
   const [trick, setTrick] = useState("");
@@ -385,19 +482,19 @@ function CaseBoard({ found, talked, memoriesDone, onClose, onVerdict }: { found:
   return (
     <div className="modal-backdrop">
       <div className="case-board">
-        <button className="close-button dark" onClick={onClose}>返回调查</button>
-        <p className="eyebrow">CASE 07 · 案件板</p>
-        <h2>重建别墅谋杀案</h2>
+        <button className="close-button dark" onClick={onClose}>{lang === "zh" ? "返回调查" : "Return to Investigation"}</button>
+        <p className="eyebrow">{ui[lang].caseBoard}</p>
+        <h2>{ui[lang].reconstruct}</h2>
         <div className="progress-line"><span style={{ width: `${Math.min(100, (found.length / clues.length) * 100)}%` }} /></div>
-        <p className="board-status">物证 {found.length}/{clues.length} · 证人 {talked.length}/5 · 已体验记忆 {memoriesDone.length}/6</p>
+        <p className="board-status">{ui[lang].evidence} {found.length}/{clues.length} · {ui[lang].witnesses} {talked.length}/5 · {ui[lang].experienced} {memoriesDone.length}/6</p>
         <div className="evidence-grid">
-          {clues.map((c) => <div className={found.includes(c.id) ? "evidence-card found" : "evidence-card"} key={c.id}><b>{found.includes(c.id) ? c.name : "未发现"}</b><span>{found.includes(c.id) ? c.detail : "继续探索别墅"}</span></div>)}
+          {clues.map((c) => { const cc = lang === "zh" ? c : clueEn[c.id]; return <div className={found.includes(c.id) ? "evidence-card found" : "evidence-card"} key={c.id}><b>{found.includes(c.id) ? cc.name : ui[lang].unknown}</b><span>{found.includes(c.id) ? cc.detail : ui[lang].keepExploring}</span></div>; })}
         </div>
         <div className="verdict-form">
-          <label>谁给牛奶下药？<select value={drug} onChange={(e) => setDrug(e.target.value)}><option value="">请选择</option>{["Amy", "Coco", "Dean", "Ben", "Ella"].map(n => <option key={n}>{n}</option>)}</select></label>
-          <label>谁实施勒杀？<select value={killer} onChange={(e) => setKiller(e.target.value)}><option value="">请选择</option>{["Amy", "Coco", "Dean", "Ben", "Ella"].map(n => <option key={n}>{n}</option>)}</select></label>
-          <label>密室如何形成？<select value={trick} onChange={(e) => setTrick(e.target.value)}><option value="">请选择</option><option value="lock">门关闭后自动锁止</option><option value="secret">凶手从密道离开</option><option value="inside">死者从内部反锁</option></select></label>
-          <button disabled={!enough || !drug || !killer || !trick} className="primary-button" onClick={() => onVerdict(drug === "Amy" && killer === "Coco" && trick === "lock")}>{enough ? "提交最终推理" : "需要询问所有人、体验六段记忆并找到至少5项物证"}</button>
+          <label>{ui[lang].drugQuestion}<select value={drug} onChange={(e) => setDrug(e.target.value)}><option value="">{ui[lang].choose}</option>{["Amy", "Coco", "Dean", "Ben", "Ella"].map(n => <option key={n}>{n}</option>)}</select></label>
+          <label>{ui[lang].killerQuestion}<select value={killer} onChange={(e) => setKiller(e.target.value)}><option value="">{ui[lang].choose}</option>{["Amy", "Coco", "Dean", "Ben", "Ella"].map(n => <option key={n}>{n}</option>)}</select></label>
+          <label>{ui[lang].roomQuestion}<select value={trick} onChange={(e) => setTrick(e.target.value)}><option value="">{ui[lang].choose}</option><option value="lock">{ui[lang].autoLock}</option><option value="secret">{ui[lang].secret}</option><option value="inside">{ui[lang].inside}</option></select></label>
+          <button disabled={!enough || !drug || !killer || !trick} className="primary-button" onClick={() => onVerdict(drug === "Amy" && killer === "Coco" && trick === "lock")}>{enough ? ui[lang].submit : ui[lang].needMore}</button>
         </div>
       </div>
     </div>
@@ -405,6 +502,7 @@ function CaseBoard({ found, talked, memoriesDone, onClose, onVerdict }: { found:
 }
 
 export default function GameClient() {
+  const [lang, setLang] = useState<Lang>("zh");
   const [started, setStarted] = useState(false);
   const [floor, setFloor] = useState<Floor>(1);
   const [player, setPlayerState] = useState<Point>({ x: 170, y: 410 });
@@ -421,6 +519,8 @@ export default function GameClient() {
   const setPlayer = useCallback((p: Point) => setPlayerState(p), []);
 
   useEffect(() => {
+    const savedLang = localStorage.getItem("case07-lang");
+    if (savedLang === "zh" || savedLang === "en") setLang(savedLang);
     const raw = localStorage.getItem("case07-save");
     if (!raw) return;
     try {
@@ -430,6 +530,11 @@ export default function GameClient() {
       setMemoriesDone(Array.isArray(save.memoriesDone) ? save.memoriesDone : save.memoryDone ? ["ella"] : []);
     } catch { /* ignore invalid local save */ }
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("case07-lang", lang);
+    document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+  }, [lang]);
 
   useEffect(() => {
     localStorage.setItem("case07-save", JSON.stringify({ found, talked, memoriesDone }));
@@ -475,11 +580,12 @@ export default function GameClient() {
     const clue = clues.find((c) => c.id === id);
     if (clue) {
       setFound((f) => f.includes(id) ? f : [...f, id]);
-      setToast(`获得物证：${clue.name}`);
+      setToast(`${ui[lang].found}${lang === "zh" ? clue.name : clueEn[clue.id].name}`);
     }
-  }, []);
+  }, [lang]);
 
-  const activeDialogue = dialogueOpen ? dialogue[dialogueOpen.id][dialogueOpen.index] : null;
+  const dialogueData = lang === "zh" ? dialogue : dialogueEn;
+  const activeDialogue = dialogueOpen ? dialogueData[dialogueOpen.id][dialogueOpen.index] : null;
   const actor = dialogueOpen ? actors.find((a) => a.id === dialogueOpen.id) : null;
 
   if (!started) {
@@ -487,12 +593,13 @@ export default function GameClient() {
       <main className="title-screen">
         <div className="rain" />
         <div className="title-card">
+          <button className="title-language" onClick={() => setLang((l) => l === "zh" ? "en" : "zh")}>{lang === "zh" ? "ENGLISH" : "中文"}</button>
           <p className="eyebrow">MEMORY DETECTIVE FILES · CASE 07</p>
-          <h1>别墅谋杀案</h1>
+          <h1>{ui[lang].title}</h1>
           <p className="title-en">MURDER AT THE OLD VILLA</p>
-          <div className="case-summary">暴雨封锁了山路。Felix死在自动上锁的主卧里，五名仍留在别墅中的人各自隐瞒了一段记忆。</div>
-          <button className="primary-button large" onClick={() => setStarted(true)}>进入别墅</button>
-          <p className="controls">WASD / 方向键移动 · 靠近目标按 E 或 Enter 互动</p>
+          <div className="case-summary">{ui[lang].summary}</div>
+          <button className="primary-button large" onClick={() => setStarted(true)}>{ui[lang].enter}</button>
+          <p className="controls">{ui[lang].controls}</p>
         </div>
       </main>
     );
@@ -501,17 +608,18 @@ export default function GameClient() {
   return (
     <main className="game-screen">
       <header className="game-header">
-        <div><p className="eyebrow">CASE 07</p><h1>别墅谋杀案</h1></div>
+        <div><p className="eyebrow">CASE 07</p><h1>{ui[lang].title}</h1></div>
         <div className="header-actions">
-          <span>物证 {found.length}/{clues.length}</span>
-          <span>证人 {talked.length}/5</span>
-          <span>记忆 {memoriesDone.length}/6</span>
-          <button className="restart-button" onClick={restartGame}>重新开始</button>
-          <button onClick={() => setBoardOpen(true)}>打开案件板</button>
+          <span>{ui[lang].evidence} {found.length}/{clues.length}</span>
+          <span>{ui[lang].witnesses} {talked.length}/5</span>
+          <span>{ui[lang].memories} {memoriesDone.length}/6</span>
+          <button className="language-toggle" onClick={() => setLang((l) => l === "zh" ? "en" : "zh")}>{lang === "zh" ? "EN" : "中文"}</button>
+          <button className="restart-button" onClick={restartGame}>{ui[lang].restart}</button>
+          <button onClick={() => setBoardOpen(true)}>{ui[lang].board}</button>
         </div>
       </header>
-      <MansionCanvas floor={floor} player={player} setPlayer={setPlayer} found={found} onInteract={onInteract} />
-      <footer className="game-footer"><span>调查员 Mara</span><span>WASD移动 · E互动 · 楼梯符号切换楼层</span></footer>
+      <MansionCanvas floor={floor} lang={lang} player={player} setPlayer={setPlayer} found={found} onInteract={onInteract} />
+      <footer className="game-footer"><span>{ui[lang].investigator}</span><span>{ui[lang].footer}</span></footer>
 
       {toast && <div className="toast">{toast}</div>}
 
@@ -519,26 +627,26 @@ export default function GameClient() {
         <div className="dialogue-panel">
           <div className="portrait" style={{ background: actor.color }}>{actor.name.slice(0, 1)}</div>
           <div className="dialogue-copy">
-            <p className="speaker">{activeDialogue.speaker} · {actor.room}</p>
+            <p className="speaker">{activeDialogue.speaker} · {lang === "zh" ? actor.room : ({"餐厅":"Dining Room","客厅":"Living Room","管家室":"Monitor Room","厨房":"Kitchen","二楼走廊":"Upper Hall"}[actor.room] || actor.room)}</p>
             <p>{activeDialogue.text}</p>
             <div className="dialogue-actions">
-              {dialogueOpen.index === dialogue[dialogueOpen.id].length - 1 && <button className="memory-button" onClick={() => { const id = dialogueOpen.id; setDialogueOpen(null); setMemoryOpen(id); }}>{memoriesDone.includes(dialogueOpen.id) ? "重看" : "进入"}{actor.name}的记忆</button>}
-              {dialogueOpen.index < dialogue[dialogueOpen.id].length - 1 ? <button onClick={() => setDialogueOpen({ ...dialogueOpen, index: dialogueOpen.index + 1 })}>继续询问</button> : <button onClick={() => setDialogueOpen(null)}>结束对话</button>}
+              {dialogueOpen.index === dialogueData[dialogueOpen.id].length - 1 && <button className="memory-button" onClick={() => { const id = dialogueOpen.id; setDialogueOpen(null); setMemoryOpen(id); }}>{memoriesDone.includes(dialogueOpen.id) ? ui[lang].replayMemory : ui[lang].enterMemory}{actor.name}{ui[lang].possessiveMemory}</button>}
+              {dialogueOpen.index < dialogueData[dialogueOpen.id].length - 1 ? <button onClick={() => setDialogueOpen({ ...dialogueOpen, index: dialogueOpen.index + 1 })}>{ui[lang].continue}</button> : <button onClick={() => setDialogueOpen(null)}>{ui[lang].endTalk}</button>}
             </div>
           </div>
         </div>
       )}
 
-      {memoryOpen && <CharacterMemory characterId={memoryOpen} onClose={() => setMemoryOpen(null)} onComplete={() => { const id = memoryOpen; setMemoriesDone((m) => m.includes(id) ? m : [...m, id]); setMemoryOpen(null); setToast(`${actors.find((a) => a.id === id)?.name}的记忆已记录`); }} />}
-      {victimOpen && <VictimPanel memoryDone={memoriesDone.includes("felix")} onClose={() => setVictimOpen(false)} onMemory={() => { setVictimOpen(false); setMemoryOpen("felix"); }} />}
-      {boardOpen && <CaseBoard found={found} talked={talked} memoriesDone={memoriesDone} onClose={() => setBoardOpen(false)} onVerdict={(good) => { setBoardOpen(false); setResult(good ? "good" : "bad"); }} />}
+      {memoryOpen && <CharacterMemory characterId={memoryOpen} lang={lang} onClose={() => setMemoryOpen(null)} onComplete={() => { const id = memoryOpen; setMemoriesDone((m) => m.includes(id) ? m : [...m, id]); setMemoryOpen(null); setToast(`${actors.find((a) => a.id === id)?.name}${ui[lang].memoryRecorded}`); }} />}
+      {victimOpen && <VictimPanel memoryDone={memoriesDone.includes("felix")} lang={lang} onClose={() => setVictimOpen(false)} onMemory={() => { setVictimOpen(false); setMemoryOpen("felix"); }} />}
+      {boardOpen && <CaseBoard found={found} talked={talked} memoriesDone={memoriesDone} lang={lang} onClose={() => setBoardOpen(false)} onVerdict={(good) => { setBoardOpen(false); setResult(good ? "good" : "bad"); }} />}
 
       {result && (
         <div className="ending-screen">
           <p className="eyebrow">FINAL VERDICT</p>
-          <h2>{result === "good" ? "完整真相" : "推理仍有矛盾"}</h2>
-          <p>{result === "good" ? "Amy利用Ella离开的空隙给牛奶下药。Coco在Felix昏迷后上楼，用窗帘绳将他勒死，再借自动门锁制造密室。黑暗中的报纸声只是伪造死亡时间的表演。" : "现有证据无法支持你的结论。回到别墅，重新比较牛奶、报纸声和自动门锁。"}</p>
-          <button className="primary-button" onClick={() => setResult(null)}>{result === "good" ? "返回别墅自由探索" : "继续调查"}</button>
+          <h2>{result === "good" ? ui[lang].finalTruth : ui[lang].wrong}</h2>
+          <p>{result === "good" ? ui[lang].goodEnding : ui[lang].badEnding}</p>
+          <button className="primary-button" onClick={() => setResult(null)}>{result === "good" ? ui[lang].returnExplore : ui[lang].continueInvestigation}</button>
         </div>
       )}
     </main>
