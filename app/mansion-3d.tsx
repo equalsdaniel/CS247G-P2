@@ -11,6 +11,10 @@ type Target = Point & { id: string; name: string; floor: Floor; color?: string }
 const MAP_W = 960;
 const MAP_H = 600;
 const SCALE = 55;
+const clueNamesEn: Record<string, string> = {
+  milk: "Milk Cup", clock: "Living-Room Clock", log: "Breaker Log",
+  paper: "Flat Newspaper", cord: "Curtain Cord", lock: "Automatic Lock",
+};
 
 const toWorld = (p: Point) => new THREE.Vector3((p.x - MAP_W / 2) / SCALE, 0, (p.y - MAP_H / 2) / SCALE);
 const toMap = (v: THREE.Vector3): Point => ({ x: v.x * SCALE + MAP_W / 2, y: v.z * SCALE + MAP_H / 2 });
@@ -39,13 +43,13 @@ function labelSprite(text: string, color = "#ead9bc") {
 }
 
 function addWall(scene: THREE.Scene, x: number, z: number, w: number, d: number, h = 3.1) {
-  return box(scene, [x, h / 2, z], [w, h, d], 0x332d29);
+  return box(scene, [x, h / 2, z], [w, h, d], 0x51463e);
 }
 
 function buildHouse(scene: THREE.Scene, floor: Floor, lang: Lang) {
-  box(scene, [0, -.08, 0], [17.6, .16, 10.8], floor === 1 ? 0x2a241f : 0x29231f);
-  const ceiling = box(scene, [0, 3.18, 0], [17.6, .12, 10.8], 0x171516);
-  ceiling.material = new THREE.MeshStandardMaterial({ color: 0x171516, side: THREE.BackSide });
+  box(scene, [0, -.08, 0], [17.6, .16, 10.8], floor === 1 ? 0x44372d : 0x40342d);
+  const ceiling = box(scene, [0, 3.18, 0], [17.6, .12, 10.8], 0x302b2a);
+  ceiling.material = new THREE.MeshStandardMaterial({ color: 0x302b2a, emissive: 0x151313, side: THREE.BackSide });
   addWall(scene, 0, -5.35, 17.8, .18); addWall(scene, 0, 5.35, 17.8, .18);
   addWall(scene, -8.8, 0, .18, 10.8); addWall(scene, 8.8, 0, .18, 10.8);
 
@@ -113,21 +117,26 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
   const stateRef = useRef({ keys: new Set<string>(), yaw: floor === 1 ? Math.PI : 0, target: null as null | { kind: "actor" | "clue" | "stairs"; id: string; label: string } });
   const [prompt, setPrompt] = useState("");
   const [room, setRoom] = useState("");
+  const [miniPlayer, setMiniPlayer] = useState(player);
+  const [miniYaw, setMiniYaw] = useState(stateRef.current.yaw);
 
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0d0c0d);
-    scene.fog = new THREE.FogExp2(0x171314, .055);
+    scene.background = new THREE.Color(0x252020);
+    scene.fog = new THREE.FogExp2(0x292222, .032);
     const camera = new THREE.PerspectiveCamera(67, 1, .05, 70);
     const start = toWorld(player); camera.position.set(start.x, 1.65, start.z);
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75)); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75)); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.45;
     mount.appendChild(renderer.domElement);
-    scene.add(new THREE.HemisphereLight(0x9c876b, 0x151215, 1.5));
-    const warm = new THREE.PointLight(0xd89b58, 16, 15); warm.position.set(-4, 2.35, -2.4); warm.castShadow = true; scene.add(warm);
-    const cold = new THREE.PointLight(0x6f8795, 11, 13); cold.position.set(5.5, 2.3, 2.5); scene.add(cold);
+    scene.add(new THREE.HemisphereLight(0xffdfb7, 0x393243, 2.8));
+    scene.add(new THREE.AmbientLight(0xffe2c2, 1.15));
+    const warm = new THREE.PointLight(0xffb869, 28, 18); warm.position.set(-4, 2.35, -2.4); warm.castShadow = true; scene.add(warm);
+    const cold = new THREE.PointLight(0x9fc7dc, 20, 16); cold.position.set(5.5, 2.3, 2.5); scene.add(cold);
+    const hall = new THREE.PointLight(0xffd39b, 18, 13); hall.position.set(0, 2.4, 3.5); scene.add(hall);
     buildHouse(scene, floor, lang);
 
     const interactive: THREE.Object3D[] = [];
@@ -140,7 +149,7 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
       const label = labelSprite(actor.name); label.position.y = 2.28; group.add(label); scene.add(group); interactive.push(group);
     });
     clues.filter(c => c.floor === floor && !found.includes(c.id)).forEach(clue => {
-      const p = toWorld(clue); const group = new THREE.Group(); group.position.set(p.x, .55, p.z); group.userData = { kind: "clue", id: clue.id, label: clue.name };
+      const p = toWorld(clue); const group = new THREE.Group(); group.position.set(p.x, .55, p.z); group.userData = { kind: "clue", id: clue.id, label: lang === "zh" ? clue.name : (clueNamesEn[clue.id] || clue.name) };
       const orb = new THREE.Mesh(new THREE.OctahedronGeometry(.18), new THREE.MeshStandardMaterial({ color: 0xd7a34c, emissive: 0x6b4614, emissiveIntensity: 1.4 })); group.add(orb);
       const glow = new THREE.PointLight(0xd99f43, 2.2, 2.5); group.add(glow); scene.add(group); interactive.push(group);
     });
@@ -154,14 +163,15 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
     const mouseMove = (e: MouseEvent) => { if (document.pointerLockElement === renderer.domElement) stateRef.current.yaw -= e.movementX * .0023; };
     const click = () => renderer.domElement.requestPointerLock?.();
     window.addEventListener("keydown",keyDown); window.addEventListener("keyup",keyUp); document.addEventListener("mousemove",mouseMove); renderer.domElement.addEventListener("click",click);
-    const raycaster = new THREE.Raycaster(); const center = new THREE.Vector2(0,0); const clock = new THREE.Clock(); let frame=0; let lastPrompt=""; let lastRoom="";
+    const raycaster = new THREE.Raycaster(); const center = new THREE.Vector2(0,0); const clock = new THREE.Clock(); let frame=0; let lastPrompt=""; let lastRoom=""; let lastMapUpdate=0;
     const animate = () => {
       frame=requestAnimationFrame(animate); const dt=Math.min(clock.getDelta(),.04); const keys=stateRef.current.keys; const speed=2.65*dt;
       if(keys.has("arrowleft")) stateRef.current.yaw += 1.7*dt; if(keys.has("arrowright")) stateRef.current.yaw -= 1.7*dt;
       const forward=new THREE.Vector3(-Math.sin(stateRef.current.yaw),0,-Math.cos(stateRef.current.yaw)); const right=new THREE.Vector3(forward.z,0,-forward.x);
       const move=new THREE.Vector3(); if(keys.has("w")||keys.has("arrowup"))move.add(forward); if(keys.has("s")||keys.has("arrowdown"))move.sub(forward); if(keys.has("a"))move.sub(right); if(keys.has("d"))move.add(right);
-      if(move.lengthSq()){move.normalize().multiplyScalar(speed); const next=camera.position.clone().add(move); next.x=THREE.MathUtils.clamp(next.x,-8.25,8.25); next.z=THREE.MathUtils.clamp(next.z,-4.85,4.85); camera.position.copy(next); setPlayer(toMap(next));}
+      if(move.lengthSq()){move.normalize().multiplyScalar(speed); const next=camera.position.clone().add(move); next.x=THREE.MathUtils.clamp(next.x,-8.25,8.25); next.z=THREE.MathUtils.clamp(next.z,-4.85,4.85); camera.position.copy(next);}
       camera.rotation.set(0,stateRef.current.yaw,0,"YXZ");
+      if(clock.elapsedTime-lastMapUpdate>.08){lastMapUpdate=clock.elapsedTime;const mapped=toMap(camera.position);setMiniPlayer(mapped);setMiniYaw(stateRef.current.yaw);setPlayer(mapped);}
       interactive.forEach((o,i)=>{ if(o.userData.kind==="clue") o.rotation.y += dt*1.5; if(o.userData.kind==="stairs") o.position.y=.5+Math.sin(clock.elapsedTime*2)*.08; });
       raycaster.setFromCamera(center,camera); const hits=raycaster.intersectObjects(interactive,true); let chosen:null|THREE.Object3D=null;
       for(const hit of hits){let root:THREE.Object3D|null=hit.object;while(root&& !root.userData.kind)root=root.parent;if(root&&camera.position.distanceTo(root.position)<2.65){chosen=root;break;}}
@@ -177,6 +187,18 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
   return <div className="map-shell three-shell">
     <div className="three-viewport" ref={mountRef} aria-label={lang === "zh" ? `别墅${floor}楼第一人称3D探索场景` : `First-person 3D villa, floor ${floor}`} />
     <div className="three-room">{room}</div><div className="three-floor">{floor}F</div><div className="crosshair" aria-hidden="true">+</div>
+    <div className={`mini-map floor-${floor}`} aria-label={lang === "zh" ? `缩略地图，玩家位于${room}` : `Mini map, player in ${room}`}>
+      <div className="mini-title"><span>{lang === "zh" ? "别墅平面图" : "VILLA MAP"}</span><b>{floor}F</b></div>
+      <div className="mini-plan">
+        {floor === 1 ? <>
+          <span className="mini-zone living">{lang === "zh" ? "客厅" : "LIVING"}</span><span className="mini-zone dining">{lang === "zh" ? "餐厅" : "DINING"}</span><span className="mini-zone kitchen">{lang === "zh" ? "厨房" : "KITCHEN"}</span>
+          <span className="mini-zone foyer">{lang === "zh" ? "门厅" : "FOYER"}</span><span className="mini-zone stair">{lang === "zh" ? "楼梯" : "STAIR"}</span><span className="mini-zone monitor">{lang === "zh" ? "管家室" : "MONITOR"}</span>
+        </> : <>
+          <span className="mini-zone guest">{lang === "zh" ? "客房" : "GUEST"}</span><span className="mini-zone hall">{lang === "zh" ? "走廊" : "HALL"}</span><span className="mini-zone bedroom">{lang === "zh" ? "主卧" : "MASTER"}</span>
+        </>}
+        <i className="mini-player" style={{ left: `${Math.max(2,Math.min(98,miniPlayer.x/MAP_W*100))}%`, top: `${Math.max(3,Math.min(97,miniPlayer.y/MAP_H*100))}%`, transform: `translate(-50%,-50%) rotate(${miniYaw}rad)` }} />
+      </div>
+    </div>
     <div className="map-help">{lang === "zh" ? "点击画面控制视角 · WASD移动 · 鼠标/方向键转向 · E互动" : "Click scene to look · WASD move · Mouse/arrows turn · E interact"}</div>
     {prompt && <button className="interaction-prompt" onClick={()=>{const t=stateRef.current.target;if(t)onInteract(t.kind,t.id);}}><kbd>E</kbd>{prompt.replace(/^按 E 互动 · |^Press E · /,"")}</button>}
     <button className="floor-switch" onClick={()=>onInteract("stairs","stairs")}>{floor===1?(lang==="zh"?"⇧ 前往二楼":"⇧ Go Upstairs"):(lang==="zh"?"⇩ 返回一楼":"⇩ Go Downstairs")}</button>
