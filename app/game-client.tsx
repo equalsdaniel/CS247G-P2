@@ -188,6 +188,39 @@ const clueEn: Record<string, { name: string; detail: string }> = {
   lock: { name: "Automatic Lock", detail: "The door locks when closed. The killer did not need to lock it from inside." },
 };
 
+const publicProfiles = [
+  {
+    id: "felix", name: "Felix", color: "#4a4543",
+    zh: { role: "死者 · 别墅主人", relation: "本案死者", note: "案发当晚被发现死于二楼主卧。" },
+    en: { role: "Victim · Owner of the Villa", relation: "Victim of Case 07", note: "Found dead in the second-floor master bedroom." },
+  },
+  {
+    id: "amy", name: "Amy", color: "#78947d",
+    zh: { role: "Felix的侄女", relation: "家族成员", note: "案发当晚参加了别墅中的家族聚会。" },
+    en: { role: "Felix's Niece", relation: "Family member", note: "Attended the family gathering at the villa that evening." },
+  },
+  {
+    id: "coco", name: "Coco", color: "#9c6f78",
+    zh: { role: "Felix的表亲", relation: "家族成员", note: "案发后一直留在客厅，等待调查。" },
+    en: { role: "Felix's Cousin", relation: "Family member", note: "Has remained in the living room since the body was found." },
+  },
+  {
+    id: "ben", name: "Ben", color: "#8277a1",
+    zh: { role: "Felix的侄子", relation: "家族成员", note: "案发前曾因私人物品前往二楼客房。" },
+    en: { role: "Felix's Nephew", relation: "Family member", note: "Went upstairs to the guest room shortly before the discovery." },
+  },
+  {
+    id: "dean", name: "Dean", color: "#727e91",
+    zh: { role: "别墅管家", relation: "受雇于Felix", note: "负责别墅日常管理、巡查及安防设备。" },
+    en: { role: "Villa Butler", relation: "Employed by Felix", note: "Responsible for the house, patrols, and security equipment." },
+  },
+  {
+    id: "ella", name: "Ella", color: "#b89564",
+    zh: { role: "别墅女仆", relation: "受雇于Felix", note: "负责厨房与起居服务，案发当晚仍在值班。" },
+    en: { role: "Villa Maid", relation: "Employed by Felix", note: "Responsible for kitchen and household service; on duty that night." },
+  },
+] as const;
+
 const ui = {
   zh: {
     title: "别墅谋杀案", summary: "暴雨封锁了山路。Felix死在自动上锁的主卧里，五名仍留在别墅中的人各自隐瞒了一段记忆。", enter: "进入别墅",
@@ -198,6 +231,7 @@ const ui = {
     unknown: "未发现", keepExploring: "继续探索别墅", drugQuestion: "谁给牛奶下药？", killerQuestion: "谁实施勒杀？", roomQuestion: "密室如何形成？", choose: "请选择",
     autoLock: "门关闭后自动锁止", secret: "凶手从密道离开", inside: "死者从内部反锁", submit: "提交最终推理", needMore: "需要询问所有人、体验六段记忆并找到至少5项物证",
     finalTruth: "完整真相", wrong: "推理仍有矛盾", goodEnding: "Amy利用Ella离开的空隙给牛奶下药。Coco在Felix昏迷后上楼，用窗帘绳将他勒死，再借自动门锁制造密室。黑暗中的报纸声只是伪造死亡时间的表演。", badEnding: "现有证据无法支持你的结论。回到别墅，重新比较牛奶、报纸声和自动门锁。", returnExplore: "返回别墅自由探索", continueInvestigation: "继续调查",
+    profilesEyebrow: "警方到场前记录", profilesTitle: "涉案人物档案", profilesIntro: "以下仅为调查开始前已经确认的公开身份。隐藏关系、矛盾与动机需要你进入别墅后自行查明。", publicRecord: "公开档案", enterAfterProfiles: "确认档案，进入别墅", backToBrief: "返回案件简介",
   },
   en: {
     title: "Murder at the Old Villa", summary: "A storm has cut off the mountain road. Felix is dead in an automatically locked bedroom, and each of the five people still inside is hiding part of a memory.", enter: "Enter the Villa",
@@ -208,6 +242,7 @@ const ui = {
     unknown: "Undiscovered", keepExploring: "Keep exploring the villa", drugQuestion: "Who drugged the milk?", killerQuestion: "Who strangled Felix?", roomQuestion: "How was the locked room created?", choose: "Choose",
     autoLock: "The door locked automatically", secret: "The killer used a secret passage", inside: "Felix locked it from inside", submit: "Submit Final Deduction", needMore: "Question everyone, view all six memories, and find at least five pieces of evidence",
     finalTruth: "The Complete Truth", wrong: "The Deduction Contradicts the Evidence", goodEnding: "Amy drugged the milk while Ella was away. After Felix lost consciousness, Coco went upstairs, strangled him with the curtain cord, and used the automatic lock to create a false locked room. The newspaper sound only disguised the time of death.", badEnding: "The evidence does not support this conclusion. Return to the villa and compare the milk, the newspaper sound, and the automatic lock.", returnExplore: "Return to Free Exploration", continueInvestigation: "Continue Investigating",
+    profilesEyebrow: "RECORDED BEFORE POLICE ARRIVAL", profilesTitle: "Persons of Interest", profilesIntro: "These are the public identities confirmed before the investigation begins. Hidden relationships, conflicts, and motives must be uncovered inside the villa.", publicRecord: "Public Record", enterAfterProfiles: "Confirm Files · Enter Villa", backToBrief: "Back to Case Brief",
   },
 };
 
@@ -504,6 +539,7 @@ function CaseBoard({ found, talked, memoriesDone, lang, onClose, onVerdict }: { 
 export default function GameClient() {
   const [lang, setLang] = useState<Lang>("zh");
   const [started, setStarted] = useState(false);
+  const [profilesOpen, setProfilesOpen] = useState(false);
   const [floor, setFloor] = useState<Floor>(1);
   const [player, setPlayerState] = useState<Point>({ x: 170, y: 410 });
   const [found, setFound] = useState<string[]>([]);
@@ -543,6 +579,7 @@ export default function GameClient() {
   const restartGame = useCallback(() => {
     localStorage.removeItem("case07-save");
     setStarted(false);
+    setProfilesOpen(false);
     setFloor(1);
     setPlayerState({ x: 170, y: 410 });
     setFound([]);
@@ -588,6 +625,40 @@ export default function GameClient() {
   const activeDialogue = dialogueOpen ? dialogueData[dialogueOpen.id][dialogueOpen.index] : null;
   const actor = dialogueOpen ? actors.find((a) => a.id === dialogueOpen.id) : null;
 
+  if (!started && profilesOpen) {
+    return (
+      <main className="profiles-screen">
+        <div className="rain" />
+        <section className="profiles-file" aria-labelledby="profiles-title">
+          <button className="title-language" onClick={() => setLang((l) => l === "zh" ? "en" : "zh")}>{lang === "zh" ? "ENGLISH" : "中文"}</button>
+          <p className="eyebrow">CASE 07 · {ui[lang].profilesEyebrow}</p>
+          <h1 id="profiles-title">{ui[lang].profilesTitle}</h1>
+          <p className="profiles-intro">{ui[lang].profilesIntro}</p>
+          <div className="profile-grid">
+            {publicProfiles.map((profile) => {
+              const copy = profile[lang];
+              return (
+                <article className={`profile-card ${profile.id === "felix" ? "victim" : ""}`} key={profile.id}>
+                  <div className="profile-mark" style={{ background: profile.color }}>{profile.name.slice(0, 1)}</div>
+                  <div className="profile-copy">
+                    <span>{ui[lang].publicRecord} · {copy.relation}</span>
+                    <h2>{profile.name}</h2>
+                    <strong>{copy.role}</strong>
+                    <p>{copy.note}</p>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+          <div className="profiles-actions">
+            <button className="secondary-button" onClick={() => setProfilesOpen(false)}>{ui[lang].backToBrief}</button>
+            <button className="primary-button large" onClick={() => { setProfilesOpen(false); setStarted(true); }}>{ui[lang].enterAfterProfiles}</button>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   if (!started) {
     return (
       <main className="title-screen">
@@ -598,7 +669,7 @@ export default function GameClient() {
           <h1>{ui[lang].title}</h1>
           <p className="title-en">MURDER AT THE OLD VILLA</p>
           <div className="case-summary">{ui[lang].summary}</div>
-          <button className="primary-button large" onClick={() => setStarted(true)}>{ui[lang].enter}</button>
+          <button className="primary-button large" onClick={() => setProfilesOpen(true)}>{ui[lang].enter}</button>
           <p className="controls">{ui[lang].controls}</p>
         </div>
       </main>

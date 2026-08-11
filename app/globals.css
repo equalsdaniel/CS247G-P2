@@ -31,6 +31,21 @@ button { cursor: pointer; }
 .primary-button:disabled { opacity: .42; cursor: not-allowed; }
 .primary-button.large { padding: 15px 34px; letter-spacing: .12em; }
 
+.profiles-screen { min-height: 100vh; position: relative; overflow: hidden; padding: 34px 20px; background: radial-gradient(circle at 50% 12%, #322c29, #100f10 68%); }
+.profiles-file { position: relative; z-index: 1; width: min(1080px, 100%); margin: auto; padding: clamp(28px, 4vw, 52px); background: rgba(17,15,15,.94); border: 1px solid rgba(217,199,166,.36); box-shadow: 0 30px 100px #000; }
+.profiles-file > h1 { margin: 0; font-size: clamp(38px, 5vw, 60px); font-weight: 500; letter-spacing: .06em; }
+.profiles-intro { max-width: 760px; margin: 12px 0 28px; color: #b8ab96; line-height: 1.75; }
+.profile-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.profile-card { min-height: 152px; display: flex; gap: 18px; padding: 18px; background: #211d1b; border: 1px solid #50453a; }
+.profile-card.victim { border-color: #8e4943; background: linear-gradient(120deg, #2b1c1c, #211d1b 70%); }
+.profile-mark { width: 82px; min-width: 82px; height: 106px; display: grid; place-items: center; color: #f1e6d3; border: 1px solid #aa987d; font-size: 40px; }
+.profile-copy span { display: block; color: #8e816f; font: 10px Arial, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+.profile-copy h2 { margin: 5px 0 0; font-size: 25px; font-weight: 500; }
+.profile-copy strong { color: var(--gold); font-size: 13px; }
+.profile-copy p { margin: 9px 0 0; color: #a99e90; font-size: 13px; line-height: 1.55; }
+.profiles-actions { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 28px; }
+.secondary-button { padding: 11px 16px; color: #bbae9b; background: transparent; border: 1px solid #5f5345; }
+
 .game-screen { min-height: 100vh; padding: 20px clamp(14px, 3vw, 44px); background: radial-gradient(circle at 50% 0, #27211e, #0e0d0e 60%); }
 .game-header { max-width: 1180px; margin: 0 auto 14px; display: flex; align-items: end; justify-content: space-between; }
 .game-header h1 { font-weight: 500; margin: 0; font-size: 28px; letter-spacing: .08em; }
@@ -122,4 +137,11 @@ kbd { color: #18120d; background: #e3d3b7; border-radius: 2px; padding: 2px 7px;
   .victim-observations { grid-template-columns: 1fr; }
   .victim-panel { padding: 42px 22px 22px; }
   .title-card { padding: 42px 24px; }
+  .profiles-screen { padding: 14px; overflow: auto; }
+  .profiles-file { padding: 46px 18px 24px; }
+  .profile-grid { grid-template-columns: 1fr; }
+  .profile-card { min-height: 132px; padding: 14px; gap: 13px; }
+  .profile-mark { width: 62px; min-width: 62px; height: 88px; font-size: 30px; }
+  .profiles-actions { align-items: stretch; flex-direction: column-reverse; }
+  .profiles-actions button { width: 100%; }
 }
