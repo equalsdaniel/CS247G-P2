@@ -20,7 +20,7 @@ const toWorld = (p: Point) => new THREE.Vector3((p.x - MAP_W / 2) / SCALE, 0, (p
 const toMap = (v: THREE.Vector3): Point => ({ x: v.x * SCALE + MAP_W / 2, y: v.z * SCALE + MAP_H / 2 });
 
 function box(scene: THREE.Scene, position: [number, number, number], size: [number, number, number], color: number, roughness = .85) {
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), new THREE.MeshStandardMaterial({ color, roughness }));
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), new THREE.MeshStandardMaterial({ color, roughness, metalness: 0, flatShading: true }));
   mesh.position.set(...position);
   mesh.castShadow = true;
   mesh.receiveShadow = true;
@@ -43,13 +43,24 @@ function labelSprite(text: string, color = "#ead9bc") {
 }
 
 function addWall(scene: THREE.Scene, x: number, z: number, w: number, d: number, h = 3.1) {
-  return box(scene, [x, h / 2, z], [w, h, d], 0x51463e);
+  return box(scene, [x, h / 2, z], [w, h, d], 0x987b63);
+}
+
+function checkerTexture() {
+  const canvas = document.createElement("canvas"); canvas.width = 16; canvas.height = 16;
+  const ctx = canvas.getContext("2d")!; ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = "#8f5e46"; ctx.fillRect(0,0,16,16); ctx.fillStyle = "#a96f4f";
+  ctx.fillRect(0,0,8,8); ctx.fillRect(8,8,8,8);
+  const texture = new THREE.CanvasTexture(canvas); texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(13,8); texture.magFilter = texture.minFilter = THREE.NearestFilter; texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
 }
 
 function buildHouse(scene: THREE.Scene, floor: Floor, lang: Lang) {
-  box(scene, [0, -.08, 0], [17.6, .16, 10.8], floor === 1 ? 0x44372d : 0x40342d);
-  const ceiling = box(scene, [0, 3.18, 0], [17.6, .12, 10.8], 0x302b2a);
-  ceiling.material = new THREE.MeshStandardMaterial({ color: 0x302b2a, emissive: 0x151313, side: THREE.BackSide });
+  const floorMesh = box(scene, [0, -.08, 0], [17.6, .16, 10.8], 0xffffff);
+  floorMesh.material = new THREE.MeshStandardMaterial({ map: checkerTexture(), roughness: 1, flatShading: true });
+  const ceiling = box(scene, [0, 3.18, 0], [17.6, .12, 10.8], 0xd4b89b);
+  ceiling.material = new THREE.MeshStandardMaterial({ color: 0xd4b89b, emissive: 0x31251e, side: THREE.BackSide, flatShading: true });
   addWall(scene, 0, -5.35, 17.8, .18); addWall(scene, 0, 5.35, 17.8, .18);
   addWall(scene, -8.8, 0, .18, 10.8); addWall(scene, 8.8, 0, .18, 10.8);
 
@@ -60,32 +71,32 @@ function buildHouse(scene: THREE.Scene, floor: Floor, lang: Lang) {
     addWall(scene, -.05, .55, 3.8, .16);
 
     // Living room: fireplace, sofas, clock, drinks.
-    box(scene, [-7.85, 1.05, -2.2], [.65, 2.1, 2.3], 0x4b3a30);
-    box(scene, [-7.45, .55, -2.2], [.38, .85, 1.35], 0x1a1513);
-    box(scene, [-5.3, .46, -4.2], [3.1, .8, .75], 0x4d4138);
-    box(scene, [-3.25, .46, -2.65], [.75, .8, 2.15], 0x4d4138);
-    box(scene, [-5.2, .28, -2.7], [1.7, .45, 1.05], 0x5c4331);
-    box(scene, [-7.25, 1.15, -.15], [.55, 2.25, .42], 0x71573a);
+    box(scene, [-7.85, 1.05, -2.2], [.65, 2.1, 2.3], 0x6f4b3a);
+    box(scene, [-7.45, .55, -2.2], [.38, .85, 1.35], 0x2c2220);
+    box(scene, [-5.3, .46, -4.2], [3.1, .8, .75], 0x477a78);
+    box(scene, [-3.25, .46, -2.65], [.75, .8, 2.15], 0x477a78);
+    box(scene, [-5.2, .28, -2.7], [1.7, .45, 1.05], 0xc1774e);
+    box(scene, [-7.25, 1.15, -.15], [.55, 2.25, .42], 0x8d633f);
     const clockFace = new THREE.Mesh(new THREE.CircleGeometry(.2, 24), new THREE.MeshStandardMaterial({ color: 0xc4aa78 }));
     clockFace.position.set(-7.24, 1.65, -.37); clockFace.rotation.x = -Math.PI / 2; scene.add(clockFace);
 
     // Dining room: long table and six chairs.
-    box(scene, [.55, .72, -2.55], [3.7, .18, 1.35], 0x604633);
-    [[-1,-3.65],[.1,-3.65],[1.2,-3.65],[-1,-1.45],[.1,-1.45],[1.2,-1.45]].forEach(([x,z]) => box(scene, [x,.48,z], [.55,.85,.55], 0x49382d));
+    box(scene, [.55, .72, -2.55], [3.7, .18, 1.35], 0xb56d45);
+    [[-1,-3.65],[.1,-3.65],[1.2,-3.65],[-1,-1.45],[.1,-1.45],[1.2,-1.45]].forEach(([x,z]) => box(scene, [x,.48,z], [.55,.85,.55], 0x76513e));
     for (let i = -1; i <= 1; i++) {
       const plate = new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.025,20), new THREE.MeshStandardMaterial({color:0xc9bda5}));
       plate.position.set(i * .9, .83, -2.55); scene.add(plate);
     }
 
     // Kitchen: worktops, stove, pantry shelves.
-    box(scene, [5.9, .55, -4.55], [4.8, 1, .65], 0x665545);
-    box(scene, [8.05, .55, -2.25], [.65, 1, 3.8], 0x665545);
-    box(scene, [5.65, .55, -2.4], [2.8, 1, 1.05], 0x55463b);
+    box(scene, [5.9, .55, -4.55], [4.8, 1, .65], 0x6f9382);
+    box(scene, [8.05, .55, -2.25], [.65, 1, 3.8], 0x6f9382);
+    box(scene, [5.65, .55, -2.4], [2.8, 1, 1.05], 0xd5ad72);
     box(scene, [4.1, 1.05, -4.5], [.8, .1, .55], 0x171719);
     for (let i = 0; i < 4; i++) box(scene, [7.95, .55 + i * .5, -1.05], [.48, .1, 1.1], 0x75614d);
 
     // Foyer, grand stair and monitor room.
-    box(scene, [-5.6, .06, 3.1], [4.6, .05, 3.7], 0x5b2430);
+    box(scene, [-5.6, .06, 3.1], [4.6, .05, 3.7], 0x9b4557);
     for (let i = 0; i < 7; i++) box(scene, [-.2, .13 + i * .17, 4.55 - i * .3], [2.5, .22, .38], 0x735b43);
     box(scene, [5.8, .75, 4.45], [3.6, 1.35, .65], 0x3e342e);
     for (let i = 0; i < 3; i++) {
@@ -95,9 +106,9 @@ function buildHouse(scene: THREE.Scene, floor: Floor, lang: Lang) {
   } else {
     addWall(scene, -2.25, -2.6, .16, 5.5); addWall(scene, 2.15, -2.6, .16, 5.5);
     addWall(scene, 5.45, .2, 6.5, .16); addWall(scene, -5.5, .2, 6.5, .16);
-    box(scene, [5.55, .45, -2.35], [3.8, .75, 2.15], 0x4c4039); // bed
-    box(scene, [5.55, 1.1, -3.25], [3.8, 1.1, .22], 0x392f2b);
-    box(scene, [8.25, 1.45, -2.1], [.18, 2.9, 3.7], 0x562f36); // curtains
+    box(scene, [5.55, .45, -2.35], [3.8, .75, 2.15], 0x668a87); // bed
+    box(scene, [5.55, 1.1, -3.25], [3.8, 1.1, .22], 0x76513e);
+    box(scene, [8.25, 1.45, -2.1], [.18, 2.9, 3.7], 0x9e5268); // curtains
     box(scene, [3.0, .9, -4.65], [1.3, 1.8, .45], 0x4b3a30); // fireplace
     box(scene, [-6.0, .45, -2.4], [3.5, .75, 2], 0x47403d); // guest bed
     for (let i = 0; i < 7; i++) box(scene, [-.1, .13 + i * .17, 4.55 - i * .3], [2.4, .22, .38], 0x735b43);
@@ -124,16 +135,16 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
     const mount = mountRef.current;
     if (!mount) return;
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x252020);
-    scene.fog = new THREE.FogExp2(0x292222, .032);
+    scene.background = new THREE.Color(0x667677);
+    scene.fog = new THREE.FogExp2(0x756b67, .018);
     const camera = new THREE.PerspectiveCamera(67, 1, .05, 70);
     const start = toWorld(player); camera.position.set(start.x, 1.65, start.z);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75)); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.45;
+    const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
+    renderer.setPixelRatio(1); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.BasicShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.62;
     mount.appendChild(renderer.domElement);
-    scene.add(new THREE.HemisphereLight(0xffdfb7, 0x393243, 2.8));
-    scene.add(new THREE.AmbientLight(0xffe2c2, 1.15));
+    scene.add(new THREE.HemisphereLight(0xffe6bd, 0x4b5062, 3.25));
+    scene.add(new THREE.AmbientLight(0xffe8cf, 1.45));
     const warm = new THREE.PointLight(0xffb869, 28, 18); warm.position.set(-4, 2.35, -2.4); warm.castShadow = true; scene.add(warm);
     const cold = new THREE.PointLight(0x9fc7dc, 20, 16); cold.position.set(5.5, 2.3, 2.5); scene.add(cold);
     const hall = new THREE.PointLight(0xffd39b, 18, 13); hall.position.set(0, 2.4, 3.5); scene.add(hall);
@@ -143,9 +154,10 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
     actors.filter(a => a.floor === floor).forEach(actor => {
       const p = toWorld(actor);
       const group = new THREE.Group(); group.position.set(p.x, 0, p.z); group.userData = { kind: "actor", id: actor.id, label: actor.name };
-      const body = new THREE.Mesh(new THREE.CapsuleGeometry(.28, .95, 6, 12), new THREE.MeshStandardMaterial({ color: actor.color || "#777", roughness: .8 }));
+      const body = new THREE.Mesh(new THREE.BoxGeometry(.55, 1.05, .42), new THREE.MeshStandardMaterial({ color: actor.color || "#777", roughness: 1, flatShading: true }));
       body.position.y = .88; body.castShadow = true; group.add(body);
-      const head = new THREE.Mesh(new THREE.SphereGeometry(.24, 16, 12), new THREE.MeshStandardMaterial({ color: 0xb99a80 })); head.position.y = 1.72; head.castShadow = true; group.add(head);
+      const head = new THREE.Mesh(new THREE.DodecahedronGeometry(.29, 0), new THREE.MeshStandardMaterial({ color: 0xd5a982, roughness: 1, flatShading: true })); head.position.y = 1.67; head.castShadow = true; group.add(head);
+      const hair = new THREE.Mesh(new THREE.BoxGeometry(.48,.16,.42),new THREE.MeshStandardMaterial({color:0x49372f,roughness:1,flatShading:true}));hair.position.set(0,1.88,0);group.add(hair);
       const label = labelSprite(actor.name); label.position.y = 2.28; group.add(label); scene.add(group); interactive.push(group);
     });
     clues.filter(c => c.floor === floor && !found.includes(c.id)).forEach(clue => {
@@ -156,7 +168,7 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
     const stairs = new THREE.Group(); stairs.position.set(0, .5, 3.75); stairs.userData = { kind: "stairs", id: "stairs", label: floor === 1 ? (lang === "zh" ? "前往二楼" : "Go Upstairs") : (lang === "zh" ? "返回一楼" : "Go Downstairs") };
     const stairMarker = new THREE.Mesh(new THREE.ConeGeometry(.24, .6, 4), new THREE.MeshStandardMaterial({ color: 0xc79c54, emissive: 0x4d3517 })); stairMarker.rotation.z = floor === 1 ? 0 : Math.PI; stairs.add(stairMarker); scene.add(stairs); interactive.push(stairs);
 
-    const resize = () => { const { clientWidth:w, clientHeight:h } = mount; renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); };
+    const resize = () => { const { clientWidth:w, clientHeight:h } = mount; renderer.setSize(Math.max(1,Math.floor(w*.68)),Math.max(1,Math.floor(h*.68)),false); camera.aspect=w/h; camera.updateProjectionMatrix(); };
     resize(); const observer = new ResizeObserver(resize); observer.observe(mount);
     const keyDown = (e: KeyboardEvent) => { stateRef.current.keys.add(e.key.toLowerCase()); if (["e","enter"].includes(e.key.toLowerCase()) && stateRef.current.target) { const t=stateRef.current.target; onInteract(t.kind,t.id); } };
     const keyUp = (e: KeyboardEvent) => stateRef.current.keys.delete(e.key.toLowerCase());
