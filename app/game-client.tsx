@@ -84,6 +84,7 @@ function MansionCanvas({
   const keys = useRef(new Set<string>());
   const playerRef = useRef(player);
   const onInteractRef = useRef(onInteract);
+  const nearestRef = useRef<{ kind: "actor" | "clue" | "stairs"; id: string; name: string; p: Point } | null>(null);
   playerRef.current = player;
   onInteractRef.current = onInteract;
 
@@ -92,9 +93,10 @@ function MansionCanvas({
       ...actors.filter((a) => a.floor === floor).map((a) => ({ kind: "actor" as const, id: a.id, name: a.name, p: a })),
       ...clues.filter((c) => c.floor === floor && !found.includes(c.id)).map((c) => ({ kind: "clue" as const, id: c.id, name: c.name, p: c })),
       { kind: "stairs" as const, id: "stairs", name: floor === 1 ? "上二楼" : "下一楼", p: { x: 470, y: 505 } },
-    ].sort((a, b) => dist(player, a.p) - dist(player, b.p))[0];
+    ].sort((a, b) => dist(player, a.p) - dist(player, b.p));
     return nearestOrNull(available, player);
   }, [floor, player, found]);
+  nearestRef.current = nearest;
 
   const interact = useCallback(() => {
     if (nearest) onInteract(nearest.kind, nearest.id);
@@ -122,19 +124,22 @@ function MansionCanvas({
         e.preventDefault();
         keys.current.add(e.key.toLowerCase());
       }
-      if ((e.key === "e" || e.key === "E" || e.key === "Enter" || e.key === " ") && nearest) {
+      const isInteractKey = e.code === "KeyE" || e.key.toLowerCase() === "e" || e.code === "Enter" || e.code === "Space";
+      const target = nearestRef.current;
+      if (isInteractKey && target) {
         e.preventDefault();
-        onInteractRef.current(nearest.kind, nearest.id);
+        e.stopPropagation();
+        onInteractRef.current(target.kind, target.id);
       }
     };
     const up = (e: KeyboardEvent) => keys.current.delete(e.key.toLowerCase());
-    window.addEventListener("keydown", down);
-    window.addEventListener("keyup", up);
+    document.addEventListener("keydown", down, true);
+    document.addEventListener("keyup", up, true);
     return () => {
-      window.removeEventListener("keydown", down);
-      window.removeEventListener("keyup", up);
+      document.removeEventListener("keydown", down, true);
+      document.removeEventListener("keyup", up, true);
     };
-  }, [nearest]);
+  }, []);
 
   useEffect(() => {
     let raf = 0;
