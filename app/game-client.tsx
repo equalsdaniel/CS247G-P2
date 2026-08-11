@@ -18,6 +18,7 @@ const actors: Actor[] = [
   { id: "dean", name: "Dean", room: "管家室", x: 795, y: 392, floor: 1, color: "#727e91" },
   { id: "ella", name: "Ella", room: "厨房", x: 660, y: 162, floor: 1, color: "#b89564" },
   { id: "ben", name: "Ben", room: "二楼走廊", x: 455, y: 290, floor: 2, color: "#8277a1" },
+  { id: "felix", name: "Felix", room: "主卧", x: 742, y: 225, floor: 2, color: "#4a4543" },
 ];
 
 const clues: Clue[] = [
@@ -53,6 +54,16 @@ const dialogue: Record<string, Dialogue[]> = {
 };
 
 const memoryScripts: Record<string, { title: string; tone: string; steps: [string, string, string, string][] }> = {
+  felix: {
+    title: "最后清醒的五分钟",
+    tone: "#50483e",
+    steps: [
+      ["22:00 · 主卧", "Ella把温热的牛奶放在床边。台灯亮着，当天的报纸摊在Felix手中。", "▤", "拿起杯子"],
+      ["22:03 · 床边", "牛奶入口时有一点不同寻常的苦味。Felix停顿片刻，仍然喝了第二口。", "◒", "放下杯子"],
+      ["22:07 · 主卧", "报纸从手中滑落，字迹开始重叠。房间里的声音越来越远。", "≋", "尝试呼喊"],
+      ["22:10 · 黑暗", "手臂无法抬起，视野完全消失。记忆在卧室门再次开启之前中断。", "●", "结束残留记忆"],
+    ],
+  },
   amy: {
     title: "被删去的厨房",
     tone: "#485f51",
@@ -313,7 +324,7 @@ function MansionCanvas({
       <div className="floor-label">{floor}F</div>
       <button className="floor-switch" onClick={() => onInteract("stairs", "stairs")}>{floor === 1 ? "⇧ 前往二楼" : "⇩ 返回一楼"}</button>
       <div className="map-help">移动到目标附近，或直接点击人物 / 金色物证 / 楼梯</div>
-      {nearest && <button className="interaction-prompt" onClick={interact}><kbd>E</kbd> {nearest.kind === "actor" ? "与" : ""}{nearest.name}{nearest.kind === "actor" ? "对话" : nearest.kind === "clue" ? "调查" : ""}</button>}
+      {nearest && <button className="interaction-prompt" onClick={interact}><kbd>E</kbd> {nearest.id === "felix" ? "检查Felix" : <>{nearest.kind === "actor" ? "与" : ""}{nearest.name}{nearest.kind === "actor" ? "对话" : nearest.kind === "clue" ? "调查" : ""}</>}</button>}
     </div>
   );
 }
@@ -347,11 +358,30 @@ function CharacterMemory({ characterId, onComplete, onClose }: { characterId: st
   );
 }
 
+function VictimPanel({ memoryDone, onMemory, onClose }: { memoryDone: boolean; onMemory: () => void; onClose: () => void }) {
+  return (
+    <div className="modal-backdrop victim-backdrop">
+      <div className="victim-panel">
+        <button className="close-button" onClick={onClose}>返回主卧</button>
+        <p className="eyebrow">VICTIM · FELIX</p>
+        <h2>检查遗体</h2>
+        <p className="victim-summary">Felix仰卧在床边。窗帘绳缠绕颈部，床头台灯已经关闭，牛奶杯仍放在伸手可及的位置。</p>
+        <div className="victim-observations">
+          <div><b>颈部勒痕</b><span>受力方向不符合独自操作留下的痕迹。</span></div>
+          <div><b>右手与报纸</b><span>手指没有油墨摩擦，报纸平整地滑落在床侧。</span></div>
+          <div><b>意识残留</b><span>设备检测到失去意识前约十分钟的短期记忆。</span></div>
+        </div>
+        <button className="primary-button" onClick={onMemory}>{memoryDone ? "重看Felix的残留记忆" : "读取Felix的残留记忆"}</button>
+      </div>
+    </div>
+  );
+}
+
 function CaseBoard({ found, talked, memoriesDone, onClose, onVerdict }: { found: string[]; talked: string[]; memoriesDone: string[]; onClose: () => void; onVerdict: (good: boolean) => void }) {
   const [drug, setDrug] = useState("");
   const [killer, setKiller] = useState("");
   const [trick, setTrick] = useState("");
-  const enough = found.length >= 5 && talked.length >= 5 && memoriesDone.length >= 5;
+  const enough = found.length >= 5 && talked.length >= 5 && memoriesDone.length >= 6;
   return (
     <div className="modal-backdrop">
       <div className="case-board">
@@ -359,7 +389,7 @@ function CaseBoard({ found, talked, memoriesDone, onClose, onVerdict }: { found:
         <p className="eyebrow">CASE 07 · 案件板</p>
         <h2>重建别墅谋杀案</h2>
         <div className="progress-line"><span style={{ width: `${Math.min(100, (found.length / clues.length) * 100)}%` }} /></div>
-        <p className="board-status">物证 {found.length}/{clues.length} · 证人 {talked.length}/5 · 已体验记忆 {memoriesDone.length}/5</p>
+        <p className="board-status">物证 {found.length}/{clues.length} · 证人 {talked.length}/5 · 已体验记忆 {memoriesDone.length}/6</p>
         <div className="evidence-grid">
           {clues.map((c) => <div className={found.includes(c.id) ? "evidence-card found" : "evidence-card"} key={c.id}><b>{found.includes(c.id) ? c.name : "未发现"}</b><span>{found.includes(c.id) ? c.detail : "继续探索别墅"}</span></div>)}
         </div>
@@ -367,7 +397,7 @@ function CaseBoard({ found, talked, memoriesDone, onClose, onVerdict }: { found:
           <label>谁给牛奶下药？<select value={drug} onChange={(e) => setDrug(e.target.value)}><option value="">请选择</option>{["Amy", "Coco", "Dean", "Ben", "Ella"].map(n => <option key={n}>{n}</option>)}</select></label>
           <label>谁实施勒杀？<select value={killer} onChange={(e) => setKiller(e.target.value)}><option value="">请选择</option>{["Amy", "Coco", "Dean", "Ben", "Ella"].map(n => <option key={n}>{n}</option>)}</select></label>
           <label>密室如何形成？<select value={trick} onChange={(e) => setTrick(e.target.value)}><option value="">请选择</option><option value="lock">门关闭后自动锁止</option><option value="secret">凶手从密道离开</option><option value="inside">死者从内部反锁</option></select></label>
-          <button disabled={!enough || !drug || !killer || !trick} className="primary-button" onClick={() => onVerdict(drug === "Amy" && killer === "Coco" && trick === "lock")}>{enough ? "提交最终推理" : "需要询问所有人、体验五段记忆并找到至少5项物证"}</button>
+          <button disabled={!enough || !drug || !killer || !trick} className="primary-button" onClick={() => onVerdict(drug === "Amy" && killer === "Coco" && trick === "lock")}>{enough ? "提交最终推理" : "需要询问所有人、体验六段记忆并找到至少5项物证"}</button>
         </div>
       </div>
     </div>
@@ -382,6 +412,7 @@ export default function GameClient() {
   const [talked, setTalked] = useState<string[]>([]);
   const [dialogueOpen, setDialogueOpen] = useState<{ id: string; index: number } | null>(null);
   const [memoryOpen, setMemoryOpen] = useState<string | null>(null);
+  const [victimOpen, setVictimOpen] = useState(false);
   const [memoriesDone, setMemoriesDone] = useState<string[]>([]);
   const [boardOpen, setBoardOpen] = useState(false);
   const [result, setResult] = useState<"good" | "bad" | null>(null);
@@ -413,6 +444,7 @@ export default function GameClient() {
     setTalked([]);
     setDialogueOpen(null);
     setMemoryOpen(null);
+    setVictimOpen(false);
     setMemoriesDone([]);
     setBoardOpen(false);
     setResult(null);
@@ -432,6 +464,10 @@ export default function GameClient() {
       return;
     }
     if (kind === "actor") {
+      if (id === "felix") {
+        setVictimOpen(true);
+        return;
+      }
       setDialogueOpen({ id, index: 0 });
       setTalked((t) => t.includes(id) ? t : [...t, id]);
       return;
@@ -469,7 +505,7 @@ export default function GameClient() {
         <div className="header-actions">
           <span>物证 {found.length}/{clues.length}</span>
           <span>证人 {talked.length}/5</span>
-          <span>记忆 {memoriesDone.length}/5</span>
+          <span>记忆 {memoriesDone.length}/6</span>
           <button className="restart-button" onClick={restartGame}>重新开始</button>
           <button onClick={() => setBoardOpen(true)}>打开案件板</button>
         </div>
@@ -494,6 +530,7 @@ export default function GameClient() {
       )}
 
       {memoryOpen && <CharacterMemory characterId={memoryOpen} onClose={() => setMemoryOpen(null)} onComplete={() => { const id = memoryOpen; setMemoriesDone((m) => m.includes(id) ? m : [...m, id]); setMemoryOpen(null); setToast(`${actors.find((a) => a.id === id)?.name}的记忆已记录`); }} />}
+      {victimOpen && <VictimPanel memoryDone={memoriesDone.includes("felix")} onClose={() => setVictimOpen(false)} onMemory={() => { setVictimOpen(false); setMemoryOpen("felix"); }} />}
       {boardOpen && <CaseBoard found={found} talked={talked} memoriesDone={memoriesDone} onClose={() => setBoardOpen(false)} onVerdict={(good) => { setBoardOpen(false); setResult(good ? "good" : "bad"); }} />}
 
       {result && (
