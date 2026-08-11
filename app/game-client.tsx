@@ -96,13 +96,34 @@ function MansionCanvas({
     return nearestOrNull(available, player);
   }, [floor, player, found]);
 
+  const interact = useCallback(() => {
+    if (nearest) onInteract(nearest.kind, nearest.id);
+  }, [nearest, onInteract]);
+
+  const handleCanvasClick = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const p = {
+      x: ((e.clientX - rect.left) / rect.width) * MAP_W,
+      y: ((e.clientY - rect.top) / rect.height) * MAP_H,
+    };
+    const targets = [
+      ...actors.filter((a) => a.floor === floor).map((a) => ({ kind: "actor" as const, id: a.id, p: a })),
+      ...clues.filter((c) => c.floor === floor && !found.includes(c.id)).map((c) => ({ kind: "clue" as const, id: c.id, p: c })),
+      { kind: "stairs" as const, id: "stairs", p: { x: 470, y: 485 } },
+    ].sort((a, b) => dist(p, a.p) - dist(p, b.p));
+    if (targets[0] && dist(p, targets[0].p) <= (targets[0].kind === "stairs" ? 72 : 38)) {
+      onInteract(targets[0].kind, targets[0].id);
+    }
+  }, [floor, found, onInteract]);
+
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "w", "a", "s", "d", "W", "A", "S", "D"].includes(e.key)) {
         e.preventDefault();
         keys.current.add(e.key.toLowerCase());
       }
-      if ((e.key === "e" || e.key === "E" || e.key === "Enter") && nearest) {
+      if ((e.key === "e" || e.key === "E" || e.key === "Enter" || e.key === " ") && nearest) {
+        e.preventDefault();
         onInteractRef.current(nearest.kind, nearest.id);
       }
     };
@@ -195,12 +216,23 @@ function MansionCanvas({
       ctx.strokeStyle = "rgba(242,204,126,.5)";
       ctx.lineWidth = 5;
       ctx.stroke();
+      ctx.fillStyle = "#e0c58f";
+      ctx.font = "600 11px sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(`物证 · ${c.name}`, c.x + 13, c.y + 4);
     });
 
+    ctx.fillStyle = "rgba(197,155,82,.18)";
+    ctx.fillRect(420, 452, 100, 68);
+    ctx.strokeStyle = "#c59b52";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(420, 452, 100, 68);
     ctx.fillStyle = "#e9dfce";
-    ctx.font = "bold 22px sans-serif";
+    ctx.font = "bold 24px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("↕", 470, 512);
+    ctx.fillText(floor === 1 ? "⇧" : "⇩", 470, 480);
+    ctx.font = "600 12px sans-serif";
+    ctx.fillText(floor === 1 ? "前往二楼" : "返回一楼", 470, 505);
 
     ctx.beginPath();
     ctx.arc(player.x, player.y, PLAYER_R, 0, Math.PI * 2);
@@ -219,15 +251,17 @@ function MansionCanvas({
 
   return (
     <div className="map-shell">
-      <canvas ref={canvasRef} className="mansion-map" aria-label={`别墅${floor}楼探索地图`} />
+      <canvas ref={canvasRef} onPointerDown={handleCanvasClick} className="mansion-map" aria-label={`别墅${floor}楼探索地图；可以直接点击人物、物证和楼梯`} />
       <div className="floor-label">{floor}F</div>
-      {nearest && <div className="interaction-prompt">按 <kbd>E</kbd> {nearest.name}</div>}
+      <button className="floor-switch" onClick={() => onInteract("stairs", "stairs")}>{floor === 1 ? "⇧ 前往二楼" : "⇩ 返回一楼"}</button>
+      <div className="map-help">移动到目标附近，或直接点击人物 / 金色物证 / 楼梯</div>
+      {nearest && <button className="interaction-prompt" onClick={interact}><kbd>E</kbd> {nearest.kind === "actor" ? "与" : ""}{nearest.name}{nearest.kind === "actor" ? "对话" : nearest.kind === "clue" ? "调查" : ""}</button>}
     </div>
   );
 }
 
 function nearestOrNull<T extends { p: Point }>(items: T[], player: Point): T | null {
-  if (!items.length || dist(items[0].p, player) > 52) return null;
+  if (!items.length || dist(items[0].p, player) > 150) return null;
   return items[0];
 }
 
