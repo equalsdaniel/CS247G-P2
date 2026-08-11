@@ -45,6 +45,9 @@ button { cursor: pointer; }
 .profile-copy p { margin: 9px 0 0; color: #a99e90; font-size: 13px; line-height: 1.55; }
 .profiles-actions { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 28px; }
 .secondary-button { padding: 11px 16px; color: #bbae9b; background: transparent; border: 1px solid #5f5345; }
+.profiles-modal { z-index: 60; }
+.profiles-modal .profiles-file { min-height: auto; }
+.profiles-modal .close-button { position: absolute; top: 20px; right: 20px; }
 
 .game-screen { min-height: 100vh; padding: 20px clamp(14px, 3vw, 44px); background: radial-gradient(circle at 50% 0, #27211e, #0e0d0e 60%); }
 .game-header { max-width: 1180px; margin: 0 auto 14px; display: flex; align-items: end; justify-content: space-between; }
@@ -53,6 +56,8 @@ button { cursor: pointer; }
 .header-actions button { color: var(--ink); border: 1px solid #756650; background: #29231e; padding: 9px 14px; }
 .header-actions .restart-button { color: #cbbda7; background: transparent; border-color: #5f5447; }
 .header-actions .restart-button:hover { color: #fff1db; border-color: #a23f39; }
+.header-actions .profiles-button { color: #f0d8aa; border-color: #9a7744; }
+.header-actions .profiles-button:hover { background: #4a3825; }
 .map-shell { width: min(1180px, 100%); aspect-ratio: 16/10; max-height: calc(100vh - 145px); margin: auto; position: relative; border: 1px solid #5f5243; background: #141211; box-shadow: 0 24px 60px rgba(0,0,0,.55); overflow: hidden; }
 .mansion-map { width: 100%; height: 100%; display: block; cursor: crosshair; touch-action: none; }
 .floor-label { position: absolute; top: 16px; right: 18px; color: #cdbb9b; font: 700 18px Arial, sans-serif; border: 1px solid #6c5c48; padding: 7px 9px; background: rgba(13,12,12,.8); }
