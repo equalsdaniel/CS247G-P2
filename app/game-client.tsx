@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Mansion3D from "./mansion-3d";
 
 type Floor = 1 | 2;
 type Lang = "zh" | "en";
@@ -690,7 +691,7 @@ export default function GameClient() {
           <button onClick={() => setBoardOpen(true)}>{ui[lang].board}</button>
         </div>
       </header>
-      <MansionCanvas floor={floor} lang={lang} player={player} setPlayer={setPlayer} found={found} onInteract={onInteract} />
+      <Mansion3D floor={floor} lang={lang} player={player} setPlayer={setPlayer} actors={actors} clues={clues} found={found} onInteract={onInteract} />
       <footer className="game-footer"><span>{ui[lang].investigator}</span><span>{ui[lang].footer}</span></footer>
 
       {profilesOpen && (
