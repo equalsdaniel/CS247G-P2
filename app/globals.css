@@ -34,6 +34,8 @@ button { cursor: pointer; }
 .game-header h1 { font-weight: 500; margin: 0; font-size: 28px; letter-spacing: .08em; }
 .header-actions { display: flex; align-items: center; gap: 14px; color: var(--muted); font: 13px Arial, sans-serif; }
 .header-actions button { color: var(--ink); border: 1px solid #756650; background: #29231e; padding: 9px 14px; }
+.header-actions .restart-button { color: #cbbda7; background: transparent; border-color: #5f5447; }
+.header-actions .restart-button:hover { color: #fff1db; border-color: #a23f39; }
 .map-shell { width: min(1180px, 100%); aspect-ratio: 16/10; max-height: calc(100vh - 145px); margin: auto; position: relative; border: 1px solid #5f5243; background: #141211; box-shadow: 0 24px 60px rgba(0,0,0,.55); overflow: hidden; }
 .mansion-map { width: 100%; height: 100%; display: block; cursor: crosshair; touch-action: none; }
 .floor-label { position: absolute; top: 16px; right: 18px; color: #cdbb9b; font: 700 18px Arial, sans-serif; border: 1px solid #6c5c48; padding: 7px 9px; background: rgba(13,12,12,.8); }
@@ -59,7 +61,7 @@ kbd { color: #18120d; background: #e3d3b7; border-radius: 2px; padding: 2px 7px;
 .dialogue-actions .memory-button { background: #452a2d; border-color: #915159; }
 
 .memory-screen, .modal-backdrop, .ending-screen { position: fixed; inset: 0; z-index: 50; }
-.memory-screen { display: grid; place-items: center; overflow: hidden; background: radial-gradient(circle, #665d4d 0, #292420 50%, #100f10 100%); }
+.memory-screen { display: grid; place-items: center; overflow: hidden; background: radial-gradient(circle, var(--memory-tone, #665d4d) 0, #292420 50%, #100f10 100%); }
 .memory-screen::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 5px, rgba(255,255,255,.015) 6px); animation: memoryDrift 5s ease-in-out infinite; }
 @keyframes memoryDrift { 50% { transform: scale(1.03) translateX(8px); filter: sepia(.5); } }
 .memory-grain { position: absolute; inset: 0; opacity: .16; background-image: radial-gradient(#fff 0.5px, transparent 0.5px); background-size: 5px 5px; }
@@ -68,6 +70,9 @@ kbd { color: #18120d; background: #e3d3b7; border-radius: 2px; padding: 2px 7px;
 .memory-object { font: 100px/1.3 Georgia, serif; color: #d9c8a5; text-shadow: 0 0 30px rgba(221,196,143,.22); }
 .memory-scene p { font-size: 19px; line-height: 1.8; }
 .memory-clue { margin: 18px 0; color: #ecc883; font-size: 13px; }
+.memory-dots { display: flex; justify-content: center; gap: 8px; margin: 18px 0 24px; }
+.memory-dots span { width: 22px; height: 3px; background: rgba(232,222,202,.2); }
+.memory-dots span.active { background: var(--gold); }
 .close-button { position: absolute; z-index: 5; top: 22px; right: 24px; background: transparent; color: #ddd0ba; border: 1px solid #756550; padding: 8px 12px; }
 .close-button.dark { color: #3a2e22; border-color: #927b5b; }
 

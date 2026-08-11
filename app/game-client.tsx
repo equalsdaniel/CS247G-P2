@@ -52,6 +52,59 @@ const dialogue: Record<string, Dialogue[]> = {
   ],
 };
 
+const memoryScripts: Record<string, { title: string; tone: string; steps: [string, string, string, string][] }> = {
+  amy: {
+    title: "被删去的厨房",
+    tone: "#485f51",
+    steps: [
+      ["21:46 · 餐厅侧门", "Amy隔着门看见Ella把牛奶倒入杯中。", "◩", "继续观察"],
+      ["21:48 · 厨房", "储藏室的门关上了。工作台旁只剩炉火声。", "♨", "走近杯子"],
+      ["21:48 · 工作台", "一只手拿起牛奶杯。记忆中的药瓶标签被白光抹去。", "◒", "触碰空白"],
+      ["21:49 · 餐厅", "灰绿色袖口少了一颗袖扣。厨房侧门在身后缓缓合上。", "◐", "离开记忆"],
+    ],
+  },
+  coco: {
+    title: "缺失的七分钟",
+    tone: "#69434d",
+    steps: [
+      ["22:14 · 客厅", "Dean起身处理跳闸。座钟的秒针仍在移动。", "◷", "等待"],
+      ["22:15 · 门厅", "记忆突然跳到了楼梯前。身后的客厅没有关门声。", "⇧", "走上楼梯"],
+      ["22:18 · 主卧", "房间没有灯。窗边传来滑轮摩擦，壁炉旁的旧报纸被拿起。", "▤", "聆听"],
+      ["22:22 · 客厅", "酒杯仍在原位，座钟却已经快进了七分钟。", "◷", "离开记忆"],
+    ],
+  },
+  dean: {
+    title: "循环的十三秒",
+    tone: "#465264",
+    steps: [
+      ["22:12 · 管家室", "东侧线路跳闸。三路监控同时闪了一下。", "▦", "查看屏幕"],
+      ["22:15 · 监控屏", "客厅里的笑声和Coco抬手的动作完整重复了一遍。", "↻", "重放画面"],
+      ["22:22 · 文件列表", "一段录像先被复制，随后主文件被十三秒循环覆盖。", "▣", "查看时间"],
+      ["22:25 · 侧走廊", "Dean握着存储卡，看向通往洗衣房的门。", "▪", "离开记忆"],
+    ],
+  },
+  ben: {
+    title: "黑暗中的纸声",
+    tone: "#554c70",
+    steps: [
+      ["22:17 · 客房", "Ben拿起遗落的耳机，设备仍在录制走廊环境声。", "◉", "返回走廊"],
+      ["22:18 · 主卧门外", "门缝下没有灯光，里面却持续传来纸张摩擦声。", "▤", "靠近门"],
+      ["22:19 · 门外", "雷声之间夹着短促的金属滑轮声，随后是两次脚步。", "≋", "分辨声音"],
+      ["22:20 · 楼梯口", "纸声停止。Ben没有敲门，转身走下楼梯。", "⇩", "离开记忆"],
+    ],
+  },
+  ella: {
+    title: "无人看管的三分钟",
+    tone: "#806844",
+    steps: [
+      ["21:45 · 厨房", "Ella点燃炉灶，把热好的牛奶倒入杯中。", "♨", "寻找托盘"],
+      ["21:48 · 储藏室", "厨房侧门响了一下，随后传来玻璃轻碰工作台的声音。", "◫", "从门缝观察"],
+      ["21:49 · 厨房", "一个灰绿色袖口从餐厅侧门消失，杯托上留下两道位置不同的水环。", "◒", "端起托盘"],
+      ["22:00 · 主卧", "Felix接过牛奶。台灯亮着，当天的报纸摊在他手中。", "▤", "离开记忆"],
+    ],
+  },
+};
+
 function dist(a: Point, b: Point) {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
@@ -270,43 +323,35 @@ function nearestOrNull<T extends { p: Point }>(items: T[], player: Point): T | n
   return items[0];
 }
 
-function EllaMemory({ onComplete, onClose }: { onComplete: () => void; onClose: () => void }) {
+function CharacterMemory({ characterId, onComplete, onClose }: { characterId: string; onComplete: () => void; onClose: () => void }) {
   const [step, setStep] = useState(0);
-  const [noticed, setNoticed] = useState(false);
-  const steps = [
-    ["21:45 · 厨房", "点击炉灶加热牛奶。", "点燃炉灶"],
-    ["21:47 · 工作台", "牛奶倒入杯中。托盘却不在原处。", "去储藏室"],
-    ["21:48 · 储藏室", "你听见厨房侧门和玻璃轻碰的声音。", "从门缝观察"],
-    ["21:49 · 厨房", "一个灰绿色袖口从餐厅侧门消失，杯托上多了一道水环。", "记住细节"],
-    ["22:00 · 主卧", "Felix接过牛奶。他还活着，台灯亮着，正在读当天的报纸。", "结束记忆"],
-  ];
+  const memory = memoryScripts[characterId];
+  const current = memory.steps[step];
   const advance = () => {
-    if (step === 2) setNoticed(true);
-    if (step === steps.length - 1) onComplete();
+    if (step === memory.steps.length - 1) onComplete();
     else setStep((s) => s + 1);
   };
   return (
-    <div className="memory-screen">
+    <div className="memory-screen" style={{ "--memory-tone": memory.tone } as React.CSSProperties}>
       <div className="memory-grain" />
       <button className="close-button" onClick={onClose}>退出记忆</button>
       <div className={`memory-scene memory-step-${step}`}>
-        <div className="memory-time">{steps[step][0]}</div>
-        <div className="memory-object" aria-hidden="true">
-          {step === 0 && "♨"}{step === 1 && "▱"}{step === 2 && "◫"}{step === 3 && "◒"}{step === 4 && "▤"}
-        </div>
-        <p>{steps[step][1]}</p>
-        {noticed && step >= 3 && <div className="memory-clue">记忆线索：灰绿色袖口 · 第二道水环</div>}
-        <button className="primary-button" onClick={advance}>{steps[step][2]}</button>
+        <p className="eyebrow">{memory.title}</p>
+        <div className="memory-time">{current[0]}</div>
+        <div className="memory-object" aria-hidden="true">{current[2]}</div>
+        <p>{current[1]}</p>
+        <div className="memory-dots" aria-label={`记忆进度 ${step + 1}/${memory.steps.length}`}>{memory.steps.map((_, i) => <span className={i <= step ? "active" : ""} key={i} />)}</div>
+        <button className="primary-button" onClick={advance}>{current[3]}</button>
       </div>
     </div>
   );
 }
 
-function CaseBoard({ found, talked, memoryDone, onClose, onVerdict }: { found: string[]; talked: string[]; memoryDone: boolean; onClose: () => void; onVerdict: (good: boolean) => void }) {
+function CaseBoard({ found, talked, memoriesDone, onClose, onVerdict }: { found: string[]; talked: string[]; memoriesDone: string[]; onClose: () => void; onVerdict: (good: boolean) => void }) {
   const [drug, setDrug] = useState("");
   const [killer, setKiller] = useState("");
   const [trick, setTrick] = useState("");
-  const enough = found.length >= 5 && talked.length >= 5 && memoryDone;
+  const enough = found.length >= 5 && talked.length >= 5 && memoriesDone.length >= 5;
   return (
     <div className="modal-backdrop">
       <div className="case-board">
@@ -314,7 +359,7 @@ function CaseBoard({ found, talked, memoryDone, onClose, onVerdict }: { found: s
         <p className="eyebrow">CASE 07 · 案件板</p>
         <h2>重建别墅谋杀案</h2>
         <div className="progress-line"><span style={{ width: `${Math.min(100, (found.length / clues.length) * 100)}%` }} /></div>
-        <p className="board-status">物证 {found.length}/{clues.length} · 证人 {talked.length}/5 · Ella记忆 {memoryDone ? "完成" : "未完成"}</p>
+        <p className="board-status">物证 {found.length}/{clues.length} · 证人 {talked.length}/5 · 已体验记忆 {memoriesDone.length}/5</p>
         <div className="evidence-grid">
           {clues.map((c) => <div className={found.includes(c.id) ? "evidence-card found" : "evidence-card"} key={c.id}><b>{found.includes(c.id) ? c.name : "未发现"}</b><span>{found.includes(c.id) ? c.detail : "继续探索别墅"}</span></div>)}
         </div>
@@ -322,7 +367,7 @@ function CaseBoard({ found, talked, memoryDone, onClose, onVerdict }: { found: s
           <label>谁给牛奶下药？<select value={drug} onChange={(e) => setDrug(e.target.value)}><option value="">请选择</option>{["Amy", "Coco", "Dean", "Ben", "Ella"].map(n => <option key={n}>{n}</option>)}</select></label>
           <label>谁实施勒杀？<select value={killer} onChange={(e) => setKiller(e.target.value)}><option value="">请选择</option>{["Amy", "Coco", "Dean", "Ben", "Ella"].map(n => <option key={n}>{n}</option>)}</select></label>
           <label>密室如何形成？<select value={trick} onChange={(e) => setTrick(e.target.value)}><option value="">请选择</option><option value="lock">门关闭后自动锁止</option><option value="secret">凶手从密道离开</option><option value="inside">死者从内部反锁</option></select></label>
-          <button disabled={!enough || !drug || !killer || !trick} className="primary-button" onClick={() => onVerdict(drug === "Amy" && killer === "Coco" && trick === "lock")}>{enough ? "提交最终推理" : "需要询问所有人、完成记忆并找到至少5项物证"}</button>
+          <button disabled={!enough || !drug || !killer || !trick} className="primary-button" onClick={() => onVerdict(drug === "Amy" && killer === "Coco" && trick === "lock")}>{enough ? "提交最终推理" : "需要询问所有人、体验五段记忆并找到至少5项物证"}</button>
         </div>
       </div>
     </div>
@@ -336,8 +381,8 @@ export default function GameClient() {
   const [found, setFound] = useState<string[]>([]);
   const [talked, setTalked] = useState<string[]>([]);
   const [dialogueOpen, setDialogueOpen] = useState<{ id: string; index: number } | null>(null);
-  const [memoryOpen, setMemoryOpen] = useState(false);
-  const [memoryDone, setMemoryDone] = useState(false);
+  const [memoryOpen, setMemoryOpen] = useState<string | null>(null);
+  const [memoriesDone, setMemoriesDone] = useState<string[]>([]);
   const [boardOpen, setBoardOpen] = useState(false);
   const [result, setResult] = useState<"good" | "bad" | null>(null);
   const [toast, setToast] = useState("");
@@ -351,13 +396,28 @@ export default function GameClient() {
       const save = JSON.parse(raw);
       setFound(save.found || []);
       setTalked(save.talked || []);
-      setMemoryDone(Boolean(save.memoryDone));
+      setMemoriesDone(Array.isArray(save.memoriesDone) ? save.memoriesDone : save.memoryDone ? ["ella"] : []);
     } catch { /* ignore invalid local save */ }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("case07-save", JSON.stringify({ found, talked, memoryDone }));
-  }, [found, talked, memoryDone]);
+    localStorage.setItem("case07-save", JSON.stringify({ found, talked, memoriesDone }));
+  }, [found, talked, memoriesDone]);
+
+  const restartGame = useCallback(() => {
+    localStorage.removeItem("case07-save");
+    setStarted(false);
+    setFloor(1);
+    setPlayerState({ x: 170, y: 410 });
+    setFound([]);
+    setTalked([]);
+    setDialogueOpen(null);
+    setMemoryOpen(null);
+    setMemoriesDone([]);
+    setBoardOpen(false);
+    setResult(null);
+    setToast("");
+  }, []);
 
   useEffect(() => {
     if (!toast) return;
@@ -409,6 +469,8 @@ export default function GameClient() {
         <div className="header-actions">
           <span>物证 {found.length}/{clues.length}</span>
           <span>证人 {talked.length}/5</span>
+          <span>记忆 {memoriesDone.length}/5</span>
+          <button className="restart-button" onClick={restartGame}>重新开始</button>
           <button onClick={() => setBoardOpen(true)}>打开案件板</button>
         </div>
       </header>
@@ -423,17 +485,16 @@ export default function GameClient() {
           <div className="dialogue-copy">
             <p className="speaker">{activeDialogue.speaker} · {actor.room}</p>
             <p>{activeDialogue.text}</p>
-            {activeDialogue.follow && <p className="observation">调查记录：{activeDialogue.follow}</p>}
             <div className="dialogue-actions">
-              {dialogueOpen.id === "ella" && dialogueOpen.index === dialogue.ella.length - 1 && !memoryDone && <button className="memory-button" onClick={() => { setDialogueOpen(null); setMemoryOpen(true); }}>进入Ella的记忆</button>}
+              {dialogueOpen.index === dialogue[dialogueOpen.id].length - 1 && <button className="memory-button" onClick={() => { const id = dialogueOpen.id; setDialogueOpen(null); setMemoryOpen(id); }}>{memoriesDone.includes(dialogueOpen.id) ? "重看" : "进入"}{actor.name}的记忆</button>}
               {dialogueOpen.index < dialogue[dialogueOpen.id].length - 1 ? <button onClick={() => setDialogueOpen({ ...dialogueOpen, index: dialogueOpen.index + 1 })}>继续询问</button> : <button onClick={() => setDialogueOpen(null)}>结束对话</button>}
             </div>
           </div>
         </div>
       )}
 
-      {memoryOpen && <EllaMemory onClose={() => setMemoryOpen(false)} onComplete={() => { setMemoryDone(true); setMemoryOpen(false); setToast("记忆完成：灰绿色袖口与第二道水环"); }} />}
-      {boardOpen && <CaseBoard found={found} talked={talked} memoryDone={memoryDone} onClose={() => setBoardOpen(false)} onVerdict={(good) => { setBoardOpen(false); setResult(good ? "good" : "bad"); }} />}
+      {memoryOpen && <CharacterMemory characterId={memoryOpen} onClose={() => setMemoryOpen(null)} onComplete={() => { const id = memoryOpen; setMemoriesDone((m) => m.includes(id) ? m : [...m, id]); setMemoryOpen(null); setToast(`${actors.find((a) => a.id === id)?.name}的记忆已记录`); }} />}
+      {boardOpen && <CaseBoard found={found} talked={talked} memoriesDone={memoriesDone} onClose={() => setBoardOpen(false)} onVerdict={(good) => { setBoardOpen(false); setResult(good ? "good" : "bad"); }} />}
 
       {result && (
         <div className="ending-screen">
