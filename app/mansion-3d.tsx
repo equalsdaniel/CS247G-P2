@@ -57,7 +57,7 @@ function checkerTexture() {
 }
 
 const clueWorldPositions: Record<string, [number, number, number]> = {
-  milk: [4.65, 1.08, -2.4], clock: [-7.23, .05, -.18], log: [5.7, 1.47, 4.02],
+  milk: [4.65, 1.08, -2.4], clock: [-7.23, .05, -.18], log: [6.72, 1.02, 1.68],
   paper: [5.45, .88, -2.2], cord: [8.02, 1.15, -2.1], lock: [2.22, 1.18, -.35],
 };
 
@@ -153,6 +153,8 @@ function buildHouse(scene: THREE.Scene, floor: Floor, lang: Lang) {
       const screen = box(scene, [4.65 + i * 1.12, 1.18, 4.08], [.9, .62, .08], 0x111a1c);
       (screen.material as THREE.MeshStandardMaterial).emissive.setHex(0x152c30);
     }
+    // Dean's inspection table keeps the breaker log in clear view.
+    box(scene, [6.72, .5, 1.68], [1.25, .9, .78], 0x7c5b42);
   } else {
     addWall(scene, -2.25, -2.6, .16, 5.5); addWall(scene, 2.15, -2.6, .16, 5.5);
     addWall(scene, 5.45, .2, 6.5, .16); addWall(scene, -5.5, .2, 6.5, .16);
