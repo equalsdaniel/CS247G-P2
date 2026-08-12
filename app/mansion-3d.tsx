@@ -241,15 +241,12 @@ function buildHouse(scene: THREE.Scene, floor: Floor, lang: Lang) {
     for (let i = 0; i < 7; i++) box(scene, [-.1, .13 + i * .17, 4.55 - i * .3], [2.4, .22, .38], 0x735b43);
   }
 
-  const roomNames = floor === 1
-    ? (lang === "zh" ? [["客厅",-5.4,-4.75],["餐厅",.5,-4.75],["厨房",5.8,-4.75],["门厅",-5.5,4.8],["主楼梯",0,4.8],["管家室",5.6,4.8]] : [["LIVING ROOM",-5.4,-4.75],["DINING ROOM",.5,-4.75],["KITCHEN",5.8,-4.75],["FOYER",-5.5,4.8],["GRAND STAIR",0,4.8],["MONITOR ROOM",5.6,4.8]])
-    : (lang === "zh" ? [["客房",-5.5,-4.8],["二楼走廊",0,1.3],["主卧",5.5,-4.8]] : [["GUEST ROOM",-5.5,-4.8],["UPPER HALL",0,1.3],["MASTER BEDROOM",5.5,-4.8]]);
-  roomNames.forEach(([name,x,z]) => { const s = labelSprite(String(name), "#b7a488"); s.position.set(Number(x), 2.65, Number(z)); s.scale.multiplyScalar(.72); scene.add(s); });
 }
 
-export default function Mansion3D({ floor, lang, player, setPlayer, actors, clues, found, onInteract }: {
+export default function Mansion3D({ floor, lang, player, setPlayer, actors, clues, found, onInteract, onOpenPeople, onOpenBoard, peopleLabel, boardLabel }: {
   floor: Floor; lang: Lang; player: Point; setPlayer: (p: Point) => void; actors: Target[]; clues: Target[]; found: string[];
   onInteract: (kind: "actor" | "clue" | "stairs", id: string) => void;
+  onOpenPeople: () => void; onOpenBoard: () => void; peopleLabel: string; boardLabel: string;
 }) {
   const mountRef = useRef<HTMLDivElement>(null);
   const stateRef = useRef({ keys: new Set<string>(), yaw: floor === 1 ? Math.PI : 0, target: null as null | { kind: "actor" | "clue" | "stairs"; id: string; label: string } });
@@ -325,7 +322,7 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
 
   return <div className="map-shell three-shell">
     <div className="three-viewport" ref={mountRef} aria-label={lang === "zh" ? `别墅${floor}楼第一人称3D探索场景` : `First-person 3D villa, floor ${floor}`} />
-    <div className="three-room">{room}</div><div className="three-floor">{floor}F</div><div className="crosshair" aria-hidden="true">+</div>
+    <div className="three-room">{room}</div><div className="crosshair" aria-hidden="true">+</div>
     <div className={`mini-map floor-${floor}`} aria-label={lang === "zh" ? `缩略地图，玩家位于${room}` : `Mini map, player in ${room}`}>
       <div className="mini-title"><span>{lang === "zh" ? "别墅平面图" : "VILLA MAP"}</span><b>{floor}F</b></div>
       <div className="mini-plan">
@@ -338,8 +335,11 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
         <i className="mini-player" style={{ left: `${Math.max(2,Math.min(98,miniPlayer.x/MAP_W*100))}%`, top: `${Math.max(3,Math.min(97,miniPlayer.y/MAP_H*100))}%`, transform: `translate(-50%,-50%) rotate(${miniYaw}rad)` }} />
       </div>
     </div>
+    <div className="map-actions" aria-label={lang === "zh" ? "调查操作" : "Investigation actions"}>
+      <button className="floor-switch" onClick={()=>onInteract("stairs","stairs")}>{floor===1?(lang==="zh"?"⇧ 前往二楼":"⇧ Go Upstairs"):(lang==="zh"?"⇩ 返回一楼":"⇩ Go Downstairs")}</button>
+      <div><button onClick={onOpenPeople}>{peopleLabel}</button><button onClick={onOpenBoard}>{boardLabel}</button></div>
+    </div>
     <div className="map-help">{lang === "zh" ? "点击画面控制视角 · WASD移动 · 鼠标/方向键转向 · E互动" : "Click scene to look · WASD move · Mouse/arrows turn · E interact"}</div>
     {prompt && <button className="interaction-prompt" onClick={()=>{const t=stateRef.current.target;if(t)onInteract(t.kind,t.id);}}><kbd>E</kbd>{prompt.replace(/^按 E 互动 · |^Press E · /,"")}</button>}
-    <button className="floor-switch" onClick={()=>onInteract("stairs","stairs")}>{floor===1?(lang==="zh"?"⇧ 前往二楼":"⇧ Go Upstairs"):(lang==="zh"?"⇩ 返回一楼":"⇩ Go Downstairs")}</button>
   </div>;
 }

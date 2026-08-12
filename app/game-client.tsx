@@ -686,12 +686,10 @@ export default function GameClient() {
           <span>{ui[lang].evidence} {found.length}/{clues.length}</span>
           <span>{ui[lang].witnesses} {talked.length}/5</span>
           <span>{ui[lang].memories} {memoriesDone.length}/6</span>
-          <button className="profiles-button" onClick={() => setProfilesOpen(true)}>{ui[lang].profilesButton}</button>
           <button className="restart-button" onClick={restartGame}>{ui[lang].restart}</button>
-          <button onClick={() => setBoardOpen(true)}>{ui[lang].board}</button>
         </div>
       </header>
-      <Mansion3D floor={floor} lang={lang} player={player} setPlayer={setPlayer} actors={actors} clues={clues} found={found} onInteract={onInteract} />
+      <Mansion3D floor={floor} lang={lang} player={player} setPlayer={setPlayer} actors={actors} clues={clues} found={found} onInteract={onInteract} onOpenPeople={() => setProfilesOpen(true)} onOpenBoard={() => setBoardOpen(true)} peopleLabel={ui[lang].profilesButton} boardLabel={ui[lang].board} />
       <footer className="game-footer"><span>{ui[lang].investigator}</span><span>{ui[lang].footer}</span></footer>
 
       {profilesOpen && (

@@ -70,9 +70,8 @@ button { cursor: pointer; }
 .three-viewport { width: 100%; height: 100%; }
 .three-viewport canvas { width: 100% !important; height: 100% !important; display: block; image-rendering: pixelated; }
 .three-room { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); color: rgba(232,222,202,.72); font: 700 11px Arial, sans-serif; letter-spacing: .2em; text-shadow: 0 2px 8px #000; }
-.three-floor { position: absolute; top: 16px; right: 18px; color: #cdbb9b; font: 700 18px Arial, sans-serif; border: 1px solid #6c5c48; padding: 7px 9px; background: rgba(13,12,12,.8); }
 .crosshair { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); color: rgba(245,225,188,.78); font: 22px/1 Arial, sans-serif; text-shadow: 0 0 8px #000; pointer-events: none; }
-.three-room, .three-floor, .crosshair, .floor-switch, .map-help, .interaction-prompt { z-index: 4; }
+.three-room, .crosshair, .map-actions, .map-help, .interaction-prompt { z-index: 4; }
 .mini-map { position: absolute; z-index: 3; top: 16px; left: 18px; width: 218px; padding: 9px; color: #d9c9ad; background: rgba(12,12,13,.86); border: 1px solid rgba(197,155,82,.72); box-shadow: 0 8px 24px rgba(0,0,0,.45); backdrop-filter: blur(4px); pointer-events: none; }
 .mini-title { display: flex; justify-content: space-between; margin-bottom: 7px; color: #cbb996; font: 700 9px Arial, sans-serif; letter-spacing: .12em; }
 .mini-title b { color: var(--gold); }
@@ -83,8 +82,11 @@ button { cursor: pointer; }
 .mini-zone.guest { left:0; top:0; width:34%; height:58%; }.mini-zone.hall { left:0; top:58%; width:100%; height:42%; }.mini-zone.bedroom { left:34%; top:0; width:66%; height:58%; }
 .mini-player { position: absolute; z-index: 4; width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 15px solid #ef5b4f; filter: drop-shadow(0 0 4px #000); transform-origin: 50% 50%; transition: left .08s linear, top .08s linear, transform .08s linear; }
 .floor-label { position: absolute; top: 16px; right: 18px; color: #cdbb9b; font: 700 18px Arial, sans-serif; border: 1px solid #6c5c48; padding: 7px 9px; background: rgba(13,12,12,.8); }
-.floor-switch { position: absolute; top: 62px; right: 18px; color: #f2dec0; background: rgba(54,38,23,.94); border: 1px solid #c59b52; padding: 9px 12px; font: 700 13px Arial, sans-serif; box-shadow: 0 5px 18px #000; }
-.floor-switch:hover { background: #684825; }
+.map-actions { position: absolute; top: 181px; left: 18px; width: 218px; display: grid; gap: 6px; padding: 7px; background: rgba(12,12,13,.86); border: 1px solid rgba(197,155,82,.72); box-shadow: 0 8px 24px rgba(0,0,0,.4); backdrop-filter: blur(4px); }
+.map-actions > div { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.map-actions button { min-width: 0; padding: 8px 7px; color: #eadcc4; background: #31271f; border: 1px solid #745f46; font: 700 11px Arial, sans-serif; }
+.map-actions .floor-switch { color: #fff0d1; background: #604323; border-color: #c59b52; }
+.map-actions button:hover { background: #684825; }
 .map-help { position: absolute; bottom: 16px; left: 18px; color: #d4c5ad; background: rgba(9,9,10,.88); border-left: 3px solid var(--gold); padding: 9px 12px; font: 12px Arial, sans-serif; }
 .interaction-prompt { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); color: #f7ead4; background: rgba(43,31,20,.96); border: 2px solid #d0a75d; padding: 13px 20px; font: 700 15px Arial, sans-serif; white-space: nowrap; box-shadow: 0 0 0 4px rgba(197,155,82,.14), 0 10px 30px #000; animation: promptPulse 1.4s ease-in-out infinite; }
 .interaction-prompt:hover { background: #5b4025; }
@@ -158,6 +160,7 @@ kbd { color: #18120d; background: #e3d3b7; border-radius: 2px; padding: 2px 7px;
   .map-help { top: auto; bottom: 76px; max-width: calc(100% - 36px); }
   .mini-map { width: 170px; }
   .mini-plan { height: 92px; }
+  .map-actions { top: 155px; width: 170px; }
   .game-footer { display: none; }
   .portrait { width: 56px; height: 72px; font-size: 28px; }
   .dialogue-panel { gap: 12px; padding: 14px; }
