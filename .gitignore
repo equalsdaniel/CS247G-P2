@@ -41,3 +41,7 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
+
+# Scratch planning/design notes (not project deliverables)
+/DESIGN_*.md
+/TODO_*.md
