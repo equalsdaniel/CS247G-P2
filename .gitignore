@@ -89,3 +89,7 @@ DerivedData/
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+# Scratch planning/design notes (not project deliverables)
+/DESIGN_*.md
+/TODO_*.md
