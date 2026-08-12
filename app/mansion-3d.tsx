@@ -264,11 +264,18 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
     return () => query.removeEventListener("change", update);
   }, []);
 
-  // Touch D-pad writes into the same key set the keyboard handler uses
-  // below, so the movement/turn logic in the animate() loop needs no
-  // touch-specific branch — it just sees "arrowup" etc. already held.
+  // The move stick writes into the same key set the keyboard handler uses
+  // below, so the movement logic in the animate() loop needs no touch-
+  // specific branch — it just sees "arrowup"/"arrowdown" already held.
   const pressDirection = (key: string) => stateRef.current.keys.add(key);
   const releaseDirection = (key: string) => stateRef.current.keys.delete(key);
+
+  // The look stick drives yaw directly and continuously (proportional to
+  // how far the thumb is dragged from center), instead of the keyboard's
+  // discrete "turning" boolean — this is what a touch look control should
+  // feel like, closer to the drag-to-look the desktop version used to have.
+  const lookYawRateRef = useRef(0);
+  const setLookYawRate = (rate: number) => { lookYawRateRef.current = rate; };
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -329,6 +336,7 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
     const animate = () => {
       frame=requestAnimationFrame(animate); const dt=Math.min(clock.getDelta(),.04); const keys=stateRef.current.keys; const speed=2.65*dt;
       if(keys.has("arrowleft")) stateRef.current.yaw += 1.7*dt; if(keys.has("arrowright")) stateRef.current.yaw -= 1.7*dt;
+      if(lookYawRateRef.current) stateRef.current.yaw += lookYawRateRef.current*dt;
       const forward=new THREE.Vector3(-Math.sin(stateRef.current.yaw),0,-Math.cos(stateRef.current.yaw));
       const move=new THREE.Vector3(); if(keys.has("arrowup"))move.add(forward); if(keys.has("arrowdown"))move.sub(forward);
       if(move.lengthSq()){move.normalize().multiplyScalar(speed); const next=camera.position.clone().add(move); next.x=THREE.MathUtils.clamp(next.x,-8.25,8.25); next.z=THREE.MathUtils.clamp(next.z,-4.85,4.85); camera.position.copy(next);}
@@ -367,40 +375,88 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
     </div>
     {prompt && <button className="interaction-prompt" onClick={()=>{const t=stateRef.current.target;if(t)onInteract(t.kind,t.id);}}><kbd>E</kbd>{prompt.replace(/^按 E 互动 · |^Press E · /,"")}</button>}
     {isTouchDevice && (
-      <div className="touch-dpad" aria-label={lang === "zh" ? "移动与转向控制" : "Move and turn controls"}>
-        <div className="touch-dpad-row">
-          <TouchDpadButton keyName="arrowup" onPress={pressDirection} onRelease={releaseDirection} label="↑" />
-        </div>
-        <div className="touch-dpad-row">
-          <TouchDpadButton keyName="arrowleft" onPress={pressDirection} onRelease={releaseDirection} label="←" />
-          <TouchDpadButton keyName="arrowdown" onPress={pressDirection} onRelease={releaseDirection} label="↓" />
-          <TouchDpadButton keyName="arrowright" onPress={pressDirection} onRelease={releaseDirection} label="→" />
-        </div>
-      </div>
+      <>
+        <TouchJoystick
+          side="left"
+          ariaLabel={lang === "zh" ? "移动摇杆" : "Move stick"}
+          onChange={(_, dy) => {
+            if (dy < -0.35) { pressDirection("arrowup"); releaseDirection("arrowdown"); }
+            else if (dy > 0.35) { pressDirection("arrowdown"); releaseDirection("arrowup"); }
+            else { releaseDirection("arrowup"); releaseDirection("arrowdown"); }
+          }}
+          onRelease={() => { releaseDirection("arrowup"); releaseDirection("arrowdown"); }}
+        />
+        <TouchJoystick
+          side="right"
+          ariaLabel={lang === "zh" ? "视角摇杆" : "Look stick"}
+          onChange={(dx) => setLookYawRate(-dx * 2.4)}
+          onRelease={() => setLookYawRate(0)}
+        />
+      </>
     )}
   </div>;
 }
 
 /**
- * A single D-pad button. Uses onPointerDown/Up/Leave/Cancel rather than
- * touch-specific events so the same component works for a mouse click too
- * (useful for testing in a desktop browser without touch emulation), and
- * releases the direction if a finger drags off the button mid-press.
+ * A draggable virtual joystick. Reports a normalized [-1,1] x/y offset from
+ * center on every move, and resets to center (calling onRelease) when the
+ * finger lifts or the pointer is cancelled. Two of these are used side by
+ * side — left for movement, right for look — matching the twin-stick
+ * pattern players expect from a mobile first-person game.
  */
-function TouchDpadButton({ keyName, label, onPress, onRelease }: {
-  keyName: string; label: string; onPress: (key: string) => void; onRelease: (key: string) => void;
+function TouchJoystick({ side, ariaLabel, onChange, onRelease }: {
+  side: "left" | "right"; ariaLabel: string;
+  onChange: (dx: number, dy: number) => void; onRelease: () => void;
 }) {
+  const baseRef = useRef<HTMLDivElement>(null);
+  const [knob, setKnob] = useState({ x: 0, y: 0 });
+  const activePointerId = useRef<number | null>(null);
+
+  const updateFromEvent = (e: React.PointerEvent) => {
+    const base = baseRef.current;
+    if (!base) return;
+    const rect = base.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const radius = rect.width / 2;
+    let dx = (e.clientX - cx) / radius;
+    let dy = (e.clientY - cy) / radius;
+    const mag = Math.hypot(dx, dy);
+    if (mag > 1) { dx /= mag; dy /= mag; }
+    setKnob({ x: dx * radius * 0.55, y: dy * radius * 0.55 });
+    onChange(dx, dy);
+  };
+
+  const handleDown = (e: React.PointerEvent) => {
+    e.preventDefault();
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    activePointerId.current = e.pointerId;
+    updateFromEvent(e);
+  };
+  const handleMove = (e: React.PointerEvent) => {
+    if (activePointerId.current !== e.pointerId) return;
+    updateFromEvent(e);
+  };
+  const handleUp = (e: React.PointerEvent) => {
+    if (activePointerId.current !== e.pointerId) return;
+    activePointerId.current = null;
+    setKnob({ x: 0, y: 0 });
+    onRelease();
+  };
+
   return (
-    <button
-      className="touch-dpad-button"
-      aria-label={keyName}
-      onPointerDown={(e) => { e.preventDefault(); onPress(keyName); }}
-      onPointerUp={() => onRelease(keyName)}
-      onPointerLeave={() => onRelease(keyName)}
-      onPointerCancel={() => onRelease(keyName)}
+    <div
+      ref={baseRef}
+      className={`touch-joystick touch-joystick-${side}`}
+      aria-label={ariaLabel}
+      onPointerDown={handleDown}
+      onPointerMove={handleMove}
+      onPointerUp={handleUp}
+      onPointerCancel={handleUp}
+      onPointerLeave={handleUp}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {label}
-    </button>
+      <div className="touch-joystick-knob" style={{ transform: `translate(${knob.x}px, ${knob.y}px)` }} />
+    </div>
   );
 }
