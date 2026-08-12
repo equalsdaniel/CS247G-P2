@@ -92,7 +92,7 @@ button { cursor: pointer; }
 .interaction-prompt:hover { background: #5b4025; }
 @keyframes promptPulse { 50% { border-color: #f0cf89; transform: translateX(-50%) scale(1.035); } }
 kbd { color: #18120d; background: #e3d3b7; border-radius: 2px; padding: 2px 7px; margin-right: 4px; }
-.game-footer { max-width: 1180px; margin: 10px auto 0; display: flex; justify-content: space-between; color: #776e63; font: 12px Arial, sans-serif; }
+.game-footer { max-width: 1180px; margin: 12px auto 0; display: flex; justify-content: space-between; color: #fff; font: 600 16px Arial, sans-serif; letter-spacing: .01em; text-shadow: 0 1px 5px #000; }
 .toast { position: fixed; top: 88px; left: 50%; transform: translateX(-50%); padding: 12px 20px; background: #3a2b1d; border: 1px solid var(--gold); z-index: 20; animation: toastIn .25s ease; }
 @keyframes toastIn { from { opacity: 0; transform: translate(-50%, -10px); } }
 

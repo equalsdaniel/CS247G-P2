@@ -350,7 +350,6 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
       <button className="floor-switch" onClick={()=>onInteract("stairs","stairs")}>{floor===1?(lang==="zh"?"⇧ 前往二楼":"⇧ Go Upstairs"):(lang==="zh"?"⇩ 返回一楼":"⇩ Go Downstairs")}</button>
       <div><button onClick={onOpenPeople}>{peopleLabel}</button><button onClick={onOpenBoard}>{boardLabel}</button></div>
     </div>
-    <div className="map-help">{lang === "zh" ? "WASD移动 · 方向键转向 · 点击人物/物证或按E互动" : "WASD move · Arrow keys turn · Click a person/evidence or press E"}</div>
     {prompt && <button className="interaction-prompt" onClick={()=>{const t=stateRef.current.target;if(t)onInteract(t.kind,t.id);}}><kbd>E</kbd>{prompt.replace(/^按 E 互动 · |^Press E · /,"")}</button>}
   </div>;
 }
