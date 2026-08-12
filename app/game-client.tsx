@@ -32,6 +32,34 @@ const clues: Clue[] = [
   { id: "lock", name: "自动门锁", detail: "门被带上后会自动锁止，所谓密室不需要凶手从内部反锁。", x: 605, y: 220, floor: 2 },
 ];
 
+/**
+ * Which suspects must have been talked to, and which other clues must
+ * already be found, before a clue exists in the world. Missing from this
+ * map = always available (Tier 0).
+ *
+ * Tier 1 (clock, log) both exist to contradict Coco's alibi, so they only
+ * appear once the player has actually heard that alibi — showing them
+ * cold wastes the "wait, that doesn't match what she said" moment.
+ * Tier 2 (cord) is the piece that most directly implicates Coco, so it's
+ * gated behind having both Tier-1 contradictions in hand. `lock` is left
+ * ungated: it explains the *mechanism* of the locked room, not who's
+ * guilty, so it doesn't need a suspect-specific unlock the way cord does
+ * — a design call, revisit if playtesting disagrees.
+ */
+const clueRequirements: Record<string, { suspects?: string[]; clues?: string[] }> = {
+  clock: { suspects: ["coco"] },
+  log: { suspects: ["coco"] },
+  cord: { clues: ["clock", "log"] },
+};
+
+function isClueAvailable(id: string, found: string[], talked: string[]): boolean {
+  const req = clueRequirements[id];
+  if (!req) return true;
+  if (req.suspects && !req.suspects.every((s) => talked.includes(s))) return false;
+  if (req.clues && !req.clues.every((c) => found.includes(c))) return false;
+  return true;
+}
+
 const dialogue: Record<string, Dialogue[]> = {
   amy: [
     { speaker: "Amy", text: "我大概21:50经过主卧，然后就回客厅了。我从没碰过那杯牛奶。", follow: "奇怪：你还没有问她牛奶是否被下药。" },
@@ -626,6 +654,14 @@ export default function GameClient() {
   const activeDialogue = dialogueOpen ? dialogueData[dialogueOpen.id][dialogueOpen.index] : null;
   const actor = dialogueOpen ? actors.find((a) => a.id === dialogueOpen.id) : null;
 
+  // Clues not yet unlocked per clueRequirements simply aren't in the world
+  // yet — same "Undiscovered" treatment they'd get anyway, no separate
+  // locked/unlocked visual state needed for now.
+  const availableClues = useMemo(
+    () => clues.filter((c) => isClueAvailable(c.id, found, talked)),
+    [found, talked],
+  );
+
   if (!started && profilesOpen) {
     return (
       <main className="profiles-screen">
@@ -689,7 +725,7 @@ export default function GameClient() {
           <button className="restart-button" onClick={restartGame}>{ui[lang].restart}</button>
         </div>
       </header>
-      <Mansion3D floor={floor} lang={lang} player={player} setPlayer={setPlayer} actors={actors} clues={clues} found={found} onInteract={onInteract} onOpenPeople={() => setProfilesOpen(true)} onOpenBoard={() => setBoardOpen(true)} peopleLabel={ui[lang].profilesButton} boardLabel={ui[lang].board} />
+      <Mansion3D floor={floor} lang={lang} player={player} setPlayer={setPlayer} actors={actors} clues={availableClues} found={found} onInteract={onInteract} onOpenPeople={() => setProfilesOpen(true)} onOpenBoard={() => setBoardOpen(true)} peopleLabel={ui[lang].profilesButton} boardLabel={ui[lang].board} />
       <footer className="game-footer"><span>{ui[lang].investigator}</span><span className="footer-controls"><span className="arrow-keys" aria-hidden="true"><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd></span>{lang === "zh" ? "移动与转向 · E 互动 · 楼层按钮切换楼层" : "Move and turn · E interact · Use the floor button"}</span></footer>
 
       {profilesOpen && (
