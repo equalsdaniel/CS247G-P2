@@ -631,7 +631,6 @@ export default function GameClient() {
       <main className="profiles-screen">
         <div className="rain" />
         <section className="profiles-file" aria-labelledby="profiles-title">
-          <button className="title-language" onClick={() => setLang((l) => l === "zh" ? "en" : "zh")}>{lang === "zh" ? "ENGLISH" : "中文"}</button>
           <p className="eyebrow">CASE 07 · {ui[lang].profilesEyebrow}</p>
           <h1 id="profiles-title">{ui[lang].profilesTitle}</h1>
           <p className="profiles-intro">{ui[lang].profilesIntro}</p>
@@ -652,7 +651,6 @@ export default function GameClient() {
             })}
           </div>
           <div className="profiles-actions">
-            <button className="secondary-button" onClick={() => setProfilesOpen(false)}>{ui[lang].backToBrief}</button>
             <button className="primary-button large" onClick={() => { setProfilesOpen(false); setStarted(true); }}>{ui[lang].enterAfterProfiles}</button>
           </div>
         </section>
@@ -665,11 +663,14 @@ export default function GameClient() {
       <main className="title-screen">
         <div className="rain" />
         <div className="title-card">
-          <button className="title-language" onClick={() => setLang((l) => l === "zh" ? "en" : "zh")}>{lang === "zh" ? "ENGLISH" : "中文"}</button>
           <p className="eyebrow">MEMORY DETECTIVE FILES · CASE 07</p>
           <h1>{ui[lang].title}</h1>
           <p className="title-en">MURDER AT THE OLD VILLA</p>
           <div className="case-summary">{ui[lang].summary}</div>
+          <div className="title-language-choice" aria-label="Choose language / 选择语言">
+            <span>选择语言 · CHOOSE LANGUAGE</span>
+            <div><button className={lang === "zh" ? "active" : ""} onClick={() => setLang("zh")}>中文</button><button className={lang === "en" ? "active" : ""} onClick={() => setLang("en")}>ENGLISH</button></div>
+          </div>
           <button className="primary-button large" onClick={() => setProfilesOpen(true)}>{ui[lang].enter}</button>
           <p className="controls">{ui[lang].controls}</p>
         </div>
@@ -685,7 +686,6 @@ export default function GameClient() {
           <span>{ui[lang].evidence} {found.length}/{clues.length}</span>
           <span>{ui[lang].witnesses} {talked.length}/5</span>
           <span>{ui[lang].memories} {memoriesDone.length}/6</span>
-          <button className="language-toggle" onClick={() => setLang((l) => l === "zh" ? "en" : "zh")}>{lang === "zh" ? "EN" : "中文"}</button>
           <button className="profiles-button" onClick={() => setProfilesOpen(true)}>{ui[lang].profilesButton}</button>
           <button className="restart-button" onClick={restartGame}>{ui[lang].restart}</button>
           <button onClick={() => setBoardOpen(true)}>{ui[lang].board}</button>

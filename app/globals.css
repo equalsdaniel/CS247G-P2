@@ -30,6 +30,11 @@ button { cursor: pointer; }
 .primary-button:hover:not(:disabled) { background: #c44b43; transform: translateY(-1px); }
 .primary-button:disabled { opacity: .42; cursor: not-allowed; }
 .primary-button.large { padding: 15px 34px; letter-spacing: .12em; }
+.title-language-choice { margin: -8px auto 26px; display: grid; justify-items: center; gap: 9px; color: #8f816d; font: 700 9px Arial, sans-serif; letter-spacing: .13em; }
+.title-language-choice > div { display: flex; border: 1px solid #665746; }
+.title-language-choice button { min-width: 108px; padding: 9px 16px; color: #a99b85; background: #171515; border: 0; }
+.title-language-choice button + button { border-left: 1px solid #665746; }
+.title-language-choice button.active { color: #fff1d5; background: #6d3a36; box-shadow: inset 0 -2px #d8a95c; }
 
 .profiles-screen { min-height: 100vh; position: relative; overflow: hidden; padding: 34px 20px; background: radial-gradient(circle at 50% 12%, #322c29, #100f10 68%); }
 .profiles-file { position: relative; z-index: 1; width: min(1080px, 100%); margin: auto; padding: clamp(28px, 4vw, 52px); background: rgba(17,15,15,.94); border: 1px solid rgba(217,199,166,.36); box-shadow: 0 30px 100px #000; }
@@ -43,7 +48,7 @@ button { cursor: pointer; }
 .profile-copy h2 { margin: 5px 0 0; font-size: 25px; font-weight: 500; }
 .profile-copy strong { color: var(--gold); font-size: 13px; }
 .profile-copy p { margin: 9px 0 0; color: #a99e90; font-size: 13px; line-height: 1.55; }
-.profiles-actions { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 28px; }
+.profiles-actions { display: flex; justify-content: flex-end; align-items: center; gap: 14px; margin-top: 28px; }
 .secondary-button { padding: 11px 16px; color: #bbae9b; background: transparent; border: 1px solid #5f5345; }
 .profiles-modal { z-index: 60; }
 .profiles-modal .profiles-file { min-height: auto; }
