@@ -28,17 +28,17 @@ function box(scene: THREE.Scene, position: [number, number, number], size: [numb
   return mesh;
 }
 
-function labelSprite(text: string, color = "#ead9bc") {
+function labelSprite(text: string, color = "#ead9bc", plain = false) {
   const canvas = document.createElement("canvas");
   canvas.width = 512; canvas.height = 128;
   const ctx = canvas.getContext("2d")!;
-  ctx.fillStyle = "rgba(12,10,10,.78)"; ctx.fillRect(0, 18, 512, 92);
-  ctx.strokeStyle = "rgba(197,155,82,.8)"; ctx.strokeRect(2, 20, 508, 88);
-  ctx.fillStyle = color; ctx.font = "600 42px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  if(!plain){ctx.fillStyle = "rgba(12,10,10,.78)";ctx.fillRect(0,18,512,92);ctx.strokeStyle="rgba(197,155,82,.8)";ctx.strokeRect(2,20,508,88);}
+  ctx.fillStyle=color;ctx.font=plain?"700 38px Arial":"600 42px Arial";ctx.textAlign="center";ctx.textBaseline="middle";
+  if(plain){ctx.shadowColor="rgba(0,0,0,.9)";ctx.shadowBlur=12;ctx.lineWidth=7;ctx.strokeStyle="rgba(0,0,0,.55)";ctx.strokeText(text,256,65);}
   ctx.fillText(text, 256, 65);
   const texture = new THREE.CanvasTexture(canvas);
   const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false }));
-  sprite.scale.set(2.25, .56, 1);
+  sprite.scale.set(plain?1.15:2.25,plain?.29:.56,1);
   return sprite;
 }
 
@@ -133,25 +133,25 @@ function makeCharacterModel(id: string, fallbackColor: string) {
     ella:{body:0xd7aa5d,skin:0x9f6a4f,hair:0x302625,headY:1.37,bodyY:.58},
   };
   const d=designs[id]||{body:fallbackColor,skin:0xd5a080,hair:0x3a2d2b,headY:1.43,bodyY:.63};
-  add(new THREE.CapsuleGeometry(.29,.42,8,16),d.body,[0,d.bodyY,0]);
+  if(["amy","coco","ella"].includes(id)) add(new THREE.CylinderGeometry(.23,.38,.68,16),d.body,[0,d.bodyY,0],[1,1,1]);
+  else add(new THREE.CapsuleGeometry(.29,.42,8,16),d.body,[0,d.bodyY,0]);
   sphere(d.skin,[0,d.headY,0],[1,1.08,.88]);
   small(d.skin,[-.36,d.headY,0],[.72,1.05,.65]); small(d.skin,[.36,d.headY,0],[.72,1.05,.65]);
   const faceZ=-.325;
   small(0x2b292b,[-.115,d.headY+.035,faceZ],[.63,1.05,.38]); small(0x2b292b,[.115,d.headY+.035,faceZ],[.63,1.05,.38]);
   small(0xc96e63,[0,d.headY-.015,-.365],[.55,1.05,.58]);
   small(0xe99a94,[-.24,d.headY-.07,-.3],[.82,.35,.3]); small(0xe99a94,[.24,d.headY-.07,-.3],[.82,.35,.3]);
-  add(new THREE.TorusGeometry(.1,.025,8,16,Math.PI),0x6f3439,[0,d.headY-.16,-.34],[1,1,1],[0,0,0]);
-  add(new THREE.BoxGeometry(.15,.045,.025),0xf5eee1,[0,d.headY-.145,-.37]);
+  small(0x7b3c47,[0,d.headY-.15,-.35],[.9,.48,.34]);
+  small(0xf6eee2,[0,d.headY-.135,-.373],[.62,.16,.2]);
 
   if(id==="amy") {
     sphere(d.hair,[0,d.headY+.15,.1],[1.06,.84,.8]);
-    sphere(d.skin,[0,d.headY,0],[1,1.08,.88]);
-    sphere(d.hair,[-.23,d.headY+.24,-.12],[.62,.48,.42]); sphere(d.hair,[.2,d.headY+.23,-.13],[.65,.45,.42]);
-    sphere(d.hair,[-.3,d.headY-.02,.08],[.42,.86,.5]);
+    sphere(d.hair,[-.19,d.headY+.25,-.13],[.48,.34,.34]); sphere(d.hair,[.18,d.headY+.24,-.14],[.5,.33,.34]);
+    sphere(d.hair,[-.3,d.headY-.02,.08],[.36,.82,.46]); sphere(d.hair,[.3,d.headY-.01,.09],[.28,.72,.42]);
     small(0xf0d6a0,[.39,d.headY-.02,-.05],[.45,.45,.4]);
     add(new THREE.BoxGeometry(.4,.12,.08),0xd9e1ce,[0,d.bodyY+.25,-.27]);
   } else if(id==="coco") {
-    sphere(d.hair,[0,d.headY+.12,.1],[1.08,.88,.82]); sphere(d.skin,[0,d.headY,0],[1,1.08,.88]);
+    sphere(d.hair,[0,d.headY+.12,.1],[1.08,.88,.82]);
     for(const x of[-.28,-.12,.13,.29])sphere(d.hair,[x,d.headY+.24,-.12],[.46,.42,.38]);
     sphere(d.hair,[-.3,d.headY-.12,.08],[.38,.82,.45]); sphere(d.hair,[.3,d.headY-.12,.08],[.38,.82,.45]);
     for(const x of[-.115,.115])add(new THREE.TorusGeometry(.105,.018,8,16),0x6f304b,[x,d.headY+.035,-.36]);
@@ -165,14 +165,14 @@ function makeCharacterModel(id: string, fallbackColor: string) {
     add(new THREE.BoxGeometry(.08,.28,.04),0x9d3644,[0,d.bodyY+.12,-.31]);
     for(let i=0;i<3;i++)small(0xe4bd5c,[-.15,d.bodyY+.23-i*.13,-.29],[.25,.25,.2]);
   } else if(id==="ben") {
-    sphere(d.hair,[.03,d.headY+.2,.05],[1.05,.62,.8]); sphere(d.skin,[0,d.headY,0],[1,1.08,.88]);
+    sphere(d.hair,[.03,d.headY+.2,.05],[1.05,.62,.8]);
     sphere(d.hair,[.15,d.headY+.29,-.12],[.85,.38,.42]); sphere(d.hair,[-.16,d.headY+.25,-.13],[.58,.35,.4]);
     for(const x of[-.115,.115])add(new THREE.TorusGeometry(.105,.018,8,16),0xf1eee7,[x,d.headY+.035,-.36]);
     add(new THREE.BoxGeometry(.08,.018,.02),0xf1eee7,[0,d.headY+.035,-.37]);
     add(new THREE.TorusGeometry(.39,.04,8,18,Math.PI),0x35425c,[0,d.headY+.05,.03]);
     small(0x35425c,[-.37,d.headY,.02],[.6,1.4,.5]); small(0x35425c,[.37,d.headY,.02],[.6,1.4,.5]);
   } else if(id==="ella") {
-    sphere(d.hair,[0,d.headY+.12,.1],[1.06,.82,.82]); sphere(d.skin,[0,d.headY,0],[1,1.08,.88]);
+    sphere(d.hair,[0,d.headY+.12,.1],[1.06,.82,.82]);
     sphere(d.hair,[0,d.headY+.38,.12],[.6,.55,.58]); sphere(d.hair,[-.25,d.headY+.18,-.1],[.5,.42,.4]);
     add(new THREE.BoxGeometry(.44,.53,.035),0xf5e6c8,[0,d.bodyY-.02,-.29]);
     small(0x62c6a8,[-.39,d.headY-.04,-.06],[.4,.55,.4]); small(0x62c6a8,[.39,d.headY-.04,-.06],[.4,.55,.4]);
@@ -285,7 +285,7 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
       if(actor.id==="felix")group.position.y=.83;
       if(actor.id==="amy")model.position.y=.43;
       group.add(model);
-      const label = labelSprite(actor.name); label.position.y = model.userData.labelHeight || 2.28; group.add(label); scene.add(group); interactive.push(group);
+      const label = labelSprite(actor.name,"#fff3dc",true); label.position.set(.58,(model.userData.labelHeight || 2.28)-.18,0); group.add(label); scene.add(group); interactive.push(group);
     });
     clues.filter(c => c.floor === floor && !found.includes(c.id)).forEach(clue => {
       const group = makeClueModel(clue.id); const position=clueWorldPositions[clue.id] || [toWorld(clue).x,.55,toWorld(clue).z]; group.position.set(...position);
