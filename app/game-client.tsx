@@ -225,10 +225,10 @@ const publicProfiles = [
 const ui = {
   zh: {
     title: "别墅谋杀案", summary: "暴雨封锁了山路。Felix死在自动上锁的主卧里，五名仍留在别墅中的人各自隐瞒了一段记忆。", enter: "进入别墅",
-    controls: "WASD / 方向键移动 · 靠近目标按 E 或 Enter 互动", evidence: "物证", witnesses: "证人", memories: "记忆", restart: "重新开始", board: "打开案件板",
+    controls: "使用方向键移动与转向 · 靠近目标按 E 或 Enter 互动", evidence: "物证", witnesses: "证人", memories: "记忆", restart: "重新开始", board: "打开案件板",
     help: "移动到目标附近，或直接点击人物 / 金色物证 / 楼梯", up: "前往二楼", down: "返回一楼", investigate: "调查", talkPrefix: "与", talkSuffix: "对话", inspectFelix: "检查Felix",
     continue: "继续询问", endTalk: "结束对话", enterMemory: "进入", replayMemory: "重看", possessiveMemory: "的记忆", exitMemory: "退出记忆", memoryRecorded: "的记忆已记录",
-    investigator: "调查员 Mara", footer: "WASD移动 · E互动 · 楼层按钮切换楼层", found: "获得物证：", caseBoard: "案件板", reconstruct: "重建别墅谋杀案", experienced: "已体验记忆",
+    investigator: "调查员 Mara", footer: "方向键操作 · E互动 · 楼层按钮切换楼层", found: "获得物证：", caseBoard: "案件板", reconstruct: "重建别墅谋杀案", experienced: "已体验记忆",
     unknown: "未发现", keepExploring: "继续探索别墅", drugQuestion: "谁给牛奶下药？", killerQuestion: "谁实施勒杀？", roomQuestion: "密室如何形成？", choose: "请选择",
     autoLock: "门关闭后自动锁止", secret: "凶手从密道离开", inside: "死者从内部反锁", submit: "提交最终推理", needMore: "需要询问所有人、体验六段记忆并找到至少5项物证",
     finalTruth: "完整真相", wrong: "推理仍有矛盾", goodEnding: "Amy利用Ella离开的空隙给牛奶下药。Coco在Felix昏迷后上楼，用窗帘绳将他勒死，再借自动门锁制造密室。黑暗中的报纸声只是伪造死亡时间的表演。", badEnding: "现有证据无法支持你的结论。回到别墅，重新比较牛奶、报纸声和自动门锁。", returnExplore: "返回别墅自由探索", continueInvestigation: "继续调查",
@@ -236,10 +236,10 @@ const ui = {
   },
   en: {
     title: "Murder at the Old Villa", summary: "A storm has cut off the mountain road. Felix is dead in an automatically locked bedroom, and each of the five people still inside is hiding part of a memory.", enter: "Enter the Villa",
-    controls: "Move with WASD / arrow keys · Press E or Enter near a target", evidence: "Evidence", witnesses: "Witnesses", memories: "Memories", restart: "Restart", board: "Case Board",
+    controls: "Use the arrow keys to move and turn · Press E or Enter near a target", evidence: "Evidence", witnesses: "Witnesses", memories: "Memories", restart: "Restart", board: "Case Board",
     help: "Move near a target, or click a person, gold evidence marker, or the stairs", up: "Go Upstairs", down: "Go Downstairs", investigate: "Investigate", talkPrefix: "Talk to ", talkSuffix: "", inspectFelix: "Inspect Felix",
     continue: "Continue", endTalk: "End Conversation", enterMemory: "Enter ", replayMemory: "Replay ", possessiveMemory: "'s Memory", exitMemory: "Exit Memory", memoryRecorded: "'s memory recorded",
-    investigator: "Investigator Mara", footer: "WASD to move · E to interact · floor button to change floors", found: "Evidence found: ", caseBoard: "CASE 07 · CASE BOARD", reconstruct: "Reconstruct the Villa Murder", experienced: "Memories viewed",
+    investigator: "Investigator Mara", footer: "Arrow keys to move · E to interact · floor button to change floors", found: "Evidence found: ", caseBoard: "CASE 07 · CASE BOARD", reconstruct: "Reconstruct the Villa Murder", experienced: "Memories viewed",
     unknown: "Undiscovered", keepExploring: "Keep exploring the villa", drugQuestion: "Who drugged the milk?", killerQuestion: "Who strangled Felix?", roomQuestion: "How was the locked room created?", choose: "Choose",
     autoLock: "The door locked automatically", secret: "The killer used a secret passage", inside: "Felix locked it from inside", submit: "Submit Final Deduction", needMore: "Question everyone, view all six memories, and find at least five pieces of evidence",
     finalTruth: "The Complete Truth", wrong: "The Deduction Contradicts the Evidence", goodEnding: "Amy drugged the milk while Ella was away. After Felix lost consciousness, Coco went upstairs, strangled him with the curtain cord, and used the automatic lock to create a false locked room. The newspaper sound only disguised the time of death.", badEnding: "The evidence does not support this conclusion. Return to the villa and compare the milk, the newspaper sound, and the automatic lock.", returnExplore: "Return to Free Exploration", continueInvestigation: "Continue Investigating",
@@ -690,7 +690,7 @@ export default function GameClient() {
         </div>
       </header>
       <Mansion3D floor={floor} lang={lang} player={player} setPlayer={setPlayer} actors={actors} clues={clues} found={found} onInteract={onInteract} onOpenPeople={() => setProfilesOpen(true)} onOpenBoard={() => setBoardOpen(true)} peopleLabel={ui[lang].profilesButton} boardLabel={ui[lang].board} />
-      <footer className="game-footer"><span>{ui[lang].investigator}</span><span>{ui[lang].footer}</span></footer>
+      <footer className="game-footer"><span>{ui[lang].investigator}</span><span className="footer-controls"><span className="arrow-keys" aria-hidden="true"><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd></span>{lang === "zh" ? "移动与转向 · E 互动 · 楼层按钮切换楼层" : "Move and turn · E interact · Use the floor button"}</span></footer>
 
       {profilesOpen && (
         <div className="modal-backdrop profiles-modal" role="dialog" aria-modal="true" aria-labelledby="profiles-modal-title">

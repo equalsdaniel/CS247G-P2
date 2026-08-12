@@ -295,7 +295,7 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
 
     const resize = () => { const { clientWidth:w, clientHeight:h } = mount; renderer.setSize(Math.max(1,Math.floor(w*.68)),Math.max(1,Math.floor(h*.68)),false); camera.aspect=w/h; camera.updateProjectionMatrix(); };
     resize(); const observer = new ResizeObserver(resize); observer.observe(mount);
-    const keyDown = (e: KeyboardEvent) => { stateRef.current.keys.add(e.key.toLowerCase()); if (["e","enter"].includes(e.key.toLowerCase()) && stateRef.current.target) { const t=stateRef.current.target; onInteract(t.kind,t.id); } };
+    const keyDown = (e: KeyboardEvent) => { const key=e.key.toLowerCase(); if(key.startsWith("arrow"))e.preventDefault(); stateRef.current.keys.add(key); if (["e","enter"].includes(key) && stateRef.current.target) { const t=stateRef.current.target; onInteract(t.kind,t.id); } };
     const keyUp = (e: KeyboardEvent) => stateRef.current.keys.delete(e.key.toLowerCase());
     const raycaster = new THREE.Raycaster(); const center = new THREE.Vector2(0,0); const clickPoint = new THREE.Vector2();
     const click = (e: MouseEvent) => {
@@ -314,8 +314,8 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
     const animate = () => {
       frame=requestAnimationFrame(animate); const dt=Math.min(clock.getDelta(),.04); const keys=stateRef.current.keys; const speed=2.65*dt;
       if(keys.has("arrowleft")) stateRef.current.yaw += 1.7*dt; if(keys.has("arrowright")) stateRef.current.yaw -= 1.7*dt;
-      const forward=new THREE.Vector3(-Math.sin(stateRef.current.yaw),0,-Math.cos(stateRef.current.yaw)); const right=new THREE.Vector3(forward.z,0,-forward.x);
-      const move=new THREE.Vector3(); if(keys.has("w")||keys.has("arrowup"))move.add(forward); if(keys.has("s")||keys.has("arrowdown"))move.sub(forward); if(keys.has("a"))move.sub(right); if(keys.has("d"))move.add(right);
+      const forward=new THREE.Vector3(-Math.sin(stateRef.current.yaw),0,-Math.cos(stateRef.current.yaw));
+      const move=new THREE.Vector3(); if(keys.has("arrowup"))move.add(forward); if(keys.has("arrowdown"))move.sub(forward);
       if(move.lengthSq()){move.normalize().multiplyScalar(speed); const next=camera.position.clone().add(move); next.x=THREE.MathUtils.clamp(next.x,-8.25,8.25); next.z=THREE.MathUtils.clamp(next.z,-4.85,4.85); camera.position.copy(next);}
       camera.rotation.set(0,stateRef.current.yaw,0,"YXZ");
       if(clock.elapsedTime-lastMapUpdate>.08){lastMapUpdate=clock.elapsedTime;const mapped=toMap(camera.position);setMiniPlayer(mapped);setMiniYaw(stateRef.current.yaw);setPlayer(mapped);}
