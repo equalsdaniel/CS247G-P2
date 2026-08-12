@@ -92,10 +92,14 @@ button { cursor: pointer; }
 .interaction-prompt:hover { background: #5b4025; }
 @keyframes promptPulse { 50% { border-color: #f0cf89; transform: translateX(-50%) scale(1.035); } }
 
-.touch-joystick { position: absolute; z-index: 5; bottom: 20px; width: 108px; height: 108px; border-radius: 50%; background: rgba(20,15,10,.55); border: 2px solid rgba(197,155,82,.6); box-shadow: 0 6px 18px rgba(0,0,0,.5), inset 0 0 20px rgba(0,0,0,.35); touch-action: none; user-select: none; -webkit-tap-highlight-color: transparent; }
-.touch-joystick-left { left: 20px; }
-.touch-joystick-right { right: 20px; }
-.touch-joystick-knob { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; background: rgba(197,155,82,.85); border: 2px solid #f0cf89; box-shadow: 0 3px 10px rgba(0,0,0,.5); pointer-events: none; }
+.touch-controls { position: absolute; z-index: 5; left: 50%; bottom: 20px; transform: translateX(-50%); display: flex; align-items: center; gap: 22px; touch-action: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+.touch-wheel { width: 116px; height: 116px; border-radius: 50%; background: rgba(20,15,10,.6); border: 3px solid rgba(197,155,82,.55); box-shadow: 0 6px 18px rgba(0,0,0,.5), inset 0 0 22px rgba(0,0,0,.4); display: grid; place-items: center; touch-action: none; }
+.touch-wheel-rim { position: relative; width: 92px; height: 92px; border-radius: 50%; border: 8px solid rgba(197,155,82,.85); box-shadow: inset 0 0 0 2px rgba(0,0,0,.3); transition: transform .05s linear; }
+.touch-wheel-spoke { position: absolute; left: 50%; top: 50%; width: 3px; height: 40px; margin: -20px 0 0 -1.5px; background: rgba(197,155,82,.7); transform-origin: 50% 50%; }
+.touch-wheel-spoke:nth-child(2) { transform: rotate(120deg); }
+.touch-wheel-spoke:nth-child(3) { transform: rotate(240deg); }
+.touch-drive-button { width: 68px; height: 68px; display: grid; place-items: center; color: #f2e6cc; background: rgba(43,31,20,.86); border: 2px solid rgba(197,155,82,.72); border-radius: 14px; font: 700 28px/1 Arial, sans-serif; box-shadow: 0 6px 18px rgba(0,0,0,.5); touch-action: none; -webkit-tap-highlight-color: transparent; }
+.touch-drive-button:active { background: rgba(97,66,35,.92); border-color: #f0cf89; transform: scale(.96); }
 kbd { color: #18120d; background: #e3d3b7; border-radius: 2px; padding: 2px 7px; margin-right: 4px; }
 .game-footer { max-width: 1180px; margin: 12px auto 0; display: flex; justify-content: space-between; color: #fff; font: 600 16px Arial, sans-serif; letter-spacing: .01em; text-shadow: 0 1px 5px #000; }
 .footer-controls { display: flex; align-items: center; gap: 10px; }
@@ -166,10 +170,10 @@ kbd { color: #18120d; background: #e3d3b7; border-radius: 2px; padding: 2px 7px;
   .header-actions span { display: none; }
   .map-shell { aspect-ratio: 4/5; max-height: calc(100vh - 130px); }
   .map-help { top: auto; bottom: 76px; max-width: calc(100% - 36px); }
-  .touch-joystick { width: 92px; height: 92px; bottom: 14px; }
-  .touch-joystick-left { left: 12px; }
-  .touch-joystick-right { right: 12px; }
-  .touch-joystick-knob { width: 40px; height: 40px; margin: -20px 0 0 -20px; }
+  .touch-controls { bottom: 12px; gap: 14px; }
+  .touch-wheel { width: 96px; height: 96px; }
+  .touch-wheel-rim { width: 76px; height: 76px; border-width: 7px; }
+  .touch-drive-button { width: 58px; height: 58px; font-size: 24px; border-radius: 12px; }
   .interaction-prompt { bottom: auto; top: 56px; }
   .mini-map { width: 170px; }
   .mini-plan { height: 92px; }
