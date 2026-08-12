@@ -332,7 +332,7 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
         </> : <>
           <span className="mini-zone guest">{lang === "zh" ? "客房" : "GUEST"}</span><span className="mini-zone hall">{lang === "zh" ? "走廊" : "HALL"}</span><span className="mini-zone bedroom">{lang === "zh" ? "主卧" : "MASTER"}</span>
         </>}
-        <i className="mini-player" style={{ left: `${Math.max(2,Math.min(98,miniPlayer.x/MAP_W*100))}%`, top: `${Math.max(3,Math.min(97,miniPlayer.y/MAP_H*100))}%`, transform: `translate(-50%,-50%) rotate(${miniYaw}rad)` }} />
+        <i className="mini-player" style={{ left: `${Math.max(2,Math.min(98,miniPlayer.x/MAP_W*100))}%`, top: `${Math.max(3,Math.min(97,miniPlayer.y/MAP_H*100))}%`, transform: `translate(-50%,-50%) rotate(${-miniYaw}rad)` }} />
       </div>
     </div>
     <div className="map-actions" aria-label={lang === "zh" ? "调查操作" : "Investigation actions"}>
