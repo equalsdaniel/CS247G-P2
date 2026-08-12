@@ -281,6 +281,7 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
       const model=makeCharacterModel(actor.id,actor.color||"#777");
       if(actor.id==="felix")group.position.y=.83;
       if(actor.id==="amy")model.position.y=.43;
+      if(actor.id==="coco"||actor.id==="dean")group.rotation.y=Math.PI;
       group.add(model);
       const label = labelSprite(actor.name,"#fff3dc",true); label.position.set(.58,(model.userData.labelHeight || 2.28)-.18,0); group.add(label); scene.add(group); interactive.push(group);
     });
@@ -296,10 +297,20 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
     resize(); const observer = new ResizeObserver(resize); observer.observe(mount);
     const keyDown = (e: KeyboardEvent) => { stateRef.current.keys.add(e.key.toLowerCase()); if (["e","enter"].includes(e.key.toLowerCase()) && stateRef.current.target) { const t=stateRef.current.target; onInteract(t.kind,t.id); } };
     const keyUp = (e: KeyboardEvent) => stateRef.current.keys.delete(e.key.toLowerCase());
-    const mouseMove = (e: MouseEvent) => { if (document.pointerLockElement === renderer.domElement) stateRef.current.yaw -= e.movementX * .0023; };
-    const click = () => renderer.domElement.requestPointerLock?.();
-    window.addEventListener("keydown",keyDown); window.addEventListener("keyup",keyUp); document.addEventListener("mousemove",mouseMove); renderer.domElement.addEventListener("click",click);
-    const raycaster = new THREE.Raycaster(); const center = new THREE.Vector2(0,0); const clock = new THREE.Clock(); let frame=0; let lastPrompt=""; let lastRoom=""; let lastMapUpdate=0;
+    const raycaster = new THREE.Raycaster(); const center = new THREE.Vector2(0,0); const clickPoint = new THREE.Vector2();
+    const click = (e: MouseEvent) => {
+      const rect=renderer.domElement.getBoundingClientRect();
+      clickPoint.set(((e.clientX-rect.left)/rect.width)*2-1,-((e.clientY-rect.top)/rect.height)*2+1);
+      raycaster.setFromCamera(clickPoint,camera);
+      const hits=raycaster.intersectObjects(interactive,true);
+      for(const hit of hits){
+        let root:THREE.Object3D|null=hit.object;
+        while(root&&!root.userData.kind)root=root.parent;
+        if(root&&camera.position.distanceTo(root.position)<3.5){onInteract(root.userData.kind,root.userData.id);break;}
+      }
+    };
+    window.addEventListener("keydown",keyDown); window.addEventListener("keyup",keyUp); renderer.domElement.addEventListener("click",click);
+    const clock = new THREE.Clock(); let frame=0; let lastPrompt=""; let lastRoom=""; let lastMapUpdate=0;
     const animate = () => {
       frame=requestAnimationFrame(animate); const dt=Math.min(clock.getDelta(),.04); const keys=stateRef.current.keys; const speed=2.65*dt;
       if(keys.has("arrowleft")) stateRef.current.yaw += 1.7*dt; if(keys.has("arrowright")) stateRef.current.yaw -= 1.7*dt;
@@ -317,7 +328,7 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
       const x=camera.position.x,z=camera.position.z; const nextRoom=floor===2?(x>2.2?(lang==="zh"?"主卧":"MASTER BEDROOM"):x<-2.2?(lang==="zh"?"客房":"GUEST ROOM"):(lang==="zh"?"二楼走廊":"UPPER HALL")):(z<.55?(x<-2.2?(lang==="zh"?"客厅":"LIVING ROOM"):x>3.25?(lang==="zh"?"厨房":"KITCHEN"):(lang==="zh"?"餐厅":"DINING ROOM")):(x<-2.2?(lang==="zh"?"门厅":"FOYER"):x>3.25?(lang==="zh"?"管家室":"MONITOR ROOM"):(lang==="zh"?"主楼梯":"GRAND STAIR"))); if(nextRoom!==lastRoom){lastRoom=nextRoom;setRoom(nextRoom);}
       renderer.render(scene,camera);
     }; animate();
-    return()=>{cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener("keydown",keyDown);window.removeEventListener("keyup",keyUp);document.removeEventListener("mousemove",mouseMove);renderer.domElement.removeEventListener("click",click);if(document.pointerLockElement===renderer.domElement)document.exitPointerLock();renderer.dispose();scene.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();const m=o.material as THREE.Material;m.dispose();}});mount.removeChild(renderer.domElement);};
+    return()=>{cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener("keydown",keyDown);window.removeEventListener("keyup",keyUp);renderer.domElement.removeEventListener("click",click);renderer.dispose();scene.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();const m=o.material as THREE.Material;m.dispose();}});mount.removeChild(renderer.domElement);};
   }, [floor, lang, actors, clues, found, onInteract, setPlayer]);
 
   return <div className="map-shell three-shell">
@@ -339,7 +350,7 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
       <button className="floor-switch" onClick={()=>onInteract("stairs","stairs")}>{floor===1?(lang==="zh"?"⇧ 前往二楼":"⇧ Go Upstairs"):(lang==="zh"?"⇩ 返回一楼":"⇩ Go Downstairs")}</button>
       <div><button onClick={onOpenPeople}>{peopleLabel}</button><button onClick={onOpenBoard}>{boardLabel}</button></div>
     </div>
-    <div className="map-help">{lang === "zh" ? "点击画面控制视角 · WASD移动 · 鼠标/方向键转向 · E互动" : "Click scene to look · WASD move · Mouse/arrows turn · E interact"}</div>
+    <div className="map-help">{lang === "zh" ? "WASD移动 · 方向键转向 · 点击人物/物证或按E互动" : "WASD move · Arrow keys turn · Click a person/evidence or press E"}</div>
     {prompt && <button className="interaction-prompt" onClick={()=>{const t=stateRef.current.target;if(t)onInteract(t.kind,t.id);}}><kbd>E</kbd>{prompt.replace(/^按 E 互动 · |^Press E · /,"")}</button>}
   </div>;
 }
