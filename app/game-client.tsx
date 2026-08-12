@@ -672,7 +672,7 @@ export default function GameClient() {
             <div><button className={lang === "zh" ? "active" : ""} onClick={() => setLang("zh")}>中文</button><button className={lang === "en" ? "active" : ""} onClick={() => setLang("en")}>ENGLISH</button></div>
           </div>
           <button className="primary-button large" onClick={() => setProfilesOpen(true)}>{ui[lang].enter}</button>
-          <p className="controls">{ui[lang].controls}</p>
+          <div className="controls"><span className="arrow-keys" aria-label={lang === "zh" ? "上下左右方向键" : "Arrow keys"}><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd></span><span>{lang === "zh" ? "移动与转向 · 靠近目标按 E 或 Enter 互动" : "Move and turn · Press E or Enter near a target"}</span></div>
         </div>
       </main>
     );

@@ -25,7 +25,7 @@ button { cursor: pointer; }
 .title-card h1 { font-size: clamp(46px, 8vw, 82px); font-weight: 500; margin: 8px 0 0; letter-spacing: .08em; }
 .title-en { margin: 8px 0 30px; letter-spacing: .28em; color: var(--muted); font: 12px Arial, sans-serif; }
 .case-summary { max-width: 520px; margin: 0 auto 32px; color: #cfc2ad; line-height: 1.9; }
-.controls { color: #776d60; font: 12px Arial, sans-serif; margin-top: 22px; }
+.controls { display: flex; align-items: center; justify-content: center; gap: 10px; color: #a99d8c; font: 13px Arial, sans-serif; margin-top: 22px; }
 .primary-button { color: #fff7e7; background: var(--red); border: 1px solid #d66a60; padding: 11px 18px; border-radius: 3px; transition: .2s ease; }
 .primary-button:hover:not(:disabled) { background: #c44b43; transform: translateY(-1px); }
 .primary-button:disabled { opacity: .42; cursor: not-allowed; }
