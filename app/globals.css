@@ -86,7 +86,8 @@ button { cursor: pointer; }
 .map-actions > div { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .map-actions button { min-width: 0; padding: 8px 7px; color: #eadcc4; background: #31271f; border: 1px solid #745f46; font: 700 11px Arial, sans-serif; }
 .map-actions .floor-switch { color: #fff0d1; background: #604323; border-color: #c59b52; }
-.map-actions button:hover { background: #684825; }
+.map-actions .floor-switch:disabled { color: #a99b85; background: #31271f; border-color: #5f5347; opacity: .55; cursor: not-allowed; }
+.map-actions button:hover:not(:disabled) { background: #684825; }
 .map-help { position: absolute; bottom: 16px; left: 18px; color: #d4c5ad; background: rgba(9,9,10,.88); border-left: 3px solid var(--gold); padding: 9px 12px; font: 12px Arial, sans-serif; }
 .interaction-prompt { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); color: #f7ead4; background: rgba(43,31,20,.96); border: 2px solid #d0a75d; padding: 13px 20px; font: 700 15px Arial, sans-serif; white-space: nowrap; box-shadow: 0 0 0 4px rgba(197,155,82,.14), 0 10px 30px #000; animation: promptPulse 1.4s ease-in-out infinite; }
 .interaction-prompt:hover { background: #5b4025; }

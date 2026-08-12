@@ -11,6 +11,10 @@ type Target = Point & { id: string; name: string; floor: Floor; color?: string }
 const MAP_W = 960;
 const MAP_H = 600;
 const SCALE = 55;
+// How close (world units) the player must be to the stair mesh before the
+// "Go Upstairs/Downstairs" button works — matches the walk-up-and-press-E
+// path so the button isn't a from-anywhere shortcut around it.
+const STAIRS_RADIUS = 2.65;
 const clueNamesEn: Record<string, string> = {
   milk: "Milk Cup", clock: "Living-Room Clock", log: "Breaker Log",
   paper: "Flat Newspaper", cord: "Curtain Cord", lock: "Automatic Lock",
@@ -278,6 +282,7 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
   const [miniPlayer, setMiniPlayer] = useState(player);
   const [miniYaw, setMiniYaw] = useState(stateRef.current.yaw);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [nearStairs, setNearStairs] = useState(false);
 
   useEffect(() => {
     const query = window.matchMedia("(pointer: coarse)");
@@ -392,7 +397,12 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
         camera.position.x = nextX; camera.position.z = nextZ;
       }
       camera.rotation.set(0,stateRef.current.yaw,0,"YXZ");
-      if(clock.elapsedTime-lastMapUpdate>.08){lastMapUpdate=clock.elapsedTime;const mapped=toMap(camera.position);setMiniPlayer(mapped);setMiniYaw(stateRef.current.yaw);setPlayer(mapped);}
+      if(clock.elapsedTime-lastMapUpdate>.08){
+        lastMapUpdate=clock.elapsedTime;
+        const mapped=toMap(camera.position);
+        setMiniPlayer(mapped);setMiniYaw(stateRef.current.yaw);setPlayer(mapped);
+        setNearStairs(camera.position.distanceTo(stairs.position) < STAIRS_RADIUS);
+      }
       interactive.forEach(o=>{ if(o.userData.kind==="clue"){const marker=o.children.find(child=>child.userData.marker);if(marker){marker.rotation.y+=dt*2;marker.position.y=marker.userData.baseY+Math.sin(clock.elapsedTime*3)*.05;}} if(o.userData.kind==="stairs") o.position.y=.5+Math.sin(clock.elapsedTime*2)*.08; });
       raycaster.setFromCamera(center,camera); const hits=raycaster.intersectObjects(interactive,true); let chosen:null|THREE.Object3D=null;
       for(const hit of hits){let root:THREE.Object3D|null=hit.object;while(root&& !root.userData.kind)root=root.parent;if(root&&camera.position.distanceTo(root.position)<2.65){chosen=root;break;}}
@@ -421,7 +431,7 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
       </div>
     </div>
     <div className="map-actions" aria-label={lang === "zh" ? "调查操作" : "Investigation actions"}>
-      <button className="floor-switch" onClick={()=>onInteract("stairs","stairs")}>{floor===1?(lang==="zh"?"⇧ 前往二楼":"⇧ Go Upstairs"):(lang==="zh"?"⇩ 返回一楼":"⇩ Go Downstairs")}</button>
+      <button className="floor-switch" disabled={!nearStairs} title={nearStairs ? undefined : (lang==="zh"?"请走到楼梯附近":"Walk over to the stairs first")} onClick={()=>onInteract("stairs","stairs")}>{floor===1?(lang==="zh"?"⇧ 前往二楼":"⇧ Go Upstairs"):(lang==="zh"?"⇩ 返回一楼":"⇩ Go Downstairs")}</button>
       <div><button onClick={onOpenPeople}>{peopleLabel}</button><button onClick={onOpenBoard}>{boardLabel}</button></div>
     </div>
     {prompt && <button className="interaction-prompt" onClick={()=>{const t=stateRef.current.target;if(t)onInteract(t.kind,t.id);}}><kbd>E</kbd>{prompt.replace(/^按 E 互动 · |^Press E · /,"")}</button>}
