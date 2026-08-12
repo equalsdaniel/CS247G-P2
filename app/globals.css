@@ -92,10 +92,10 @@ button { cursor: pointer; }
 .interaction-prompt:hover { background: #5b4025; }
 @keyframes promptPulse { 50% { border-color: #f0cf89; transform: translateX(-50%) scale(1.035); } }
 
-.touch-dpad { position: absolute; z-index: 5; left: 16px; bottom: 16px; display: grid; gap: 6px; justify-items: center; touch-action: none; user-select: none; }
-.touch-dpad-row { display: flex; gap: 6px; }
-.touch-dpad-button { width: 56px; height: 56px; display: grid; place-items: center; color: #f2e6cc; background: rgba(43,31,20,.86); border: 2px solid rgba(197,155,82,.72); border-radius: 10px; font: 700 24px/1 Arial, sans-serif; box-shadow: 0 6px 18px rgba(0,0,0,.5); -webkit-tap-highlight-color: transparent; touch-action: none; }
-.touch-dpad-button:active { background: rgba(97,66,35,.92); border-color: #f0cf89; transform: scale(.96); }
+.touch-joystick { position: absolute; z-index: 5; bottom: 20px; width: 108px; height: 108px; border-radius: 50%; background: rgba(20,15,10,.55); border: 2px solid rgba(197,155,82,.6); box-shadow: 0 6px 18px rgba(0,0,0,.5), inset 0 0 20px rgba(0,0,0,.35); touch-action: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+.touch-joystick-left { left: 20px; }
+.touch-joystick-right { right: 20px; }
+.touch-joystick-knob { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; background: rgba(197,155,82,.85); border: 2px solid #f0cf89; box-shadow: 0 3px 10px rgba(0,0,0,.5); pointer-events: none; }
 kbd { color: #18120d; background: #e3d3b7; border-radius: 2px; padding: 2px 7px; margin-right: 4px; }
 .game-footer { max-width: 1180px; margin: 12px auto 0; display: flex; justify-content: space-between; color: #fff; font: 600 16px Arial, sans-serif; letter-spacing: .01em; text-shadow: 0 1px 5px #000; }
 .footer-controls { display: flex; align-items: center; gap: 10px; }
@@ -166,9 +166,11 @@ kbd { color: #18120d; background: #e3d3b7; border-radius: 2px; padding: 2px 7px;
   .header-actions span { display: none; }
   .map-shell { aspect-ratio: 4/5; max-height: calc(100vh - 130px); }
   .map-help { top: auto; bottom: 76px; max-width: calc(100% - 36px); }
-  .touch-dpad { left: 10px; bottom: 10px; }
-  .touch-dpad-button { width: 48px; height: 48px; font-size: 20px; }
-  .interaction-prompt { left: auto; right: 14px; transform: none; }
+  .touch-joystick { width: 92px; height: 92px; bottom: 14px; }
+  .touch-joystick-left { left: 12px; }
+  .touch-joystick-right { right: 12px; }
+  .touch-joystick-knob { width: 40px; height: 40px; margin: -20px 0 0 -20px; }
+  .interaction-prompt { bottom: auto; top: 56px; }
   .mini-map { width: 170px; }
   .mini-plan { height: 92px; }
   .map-actions { top: 155px; width: 170px; }
