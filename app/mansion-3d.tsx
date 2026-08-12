@@ -254,6 +254,21 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
   const [room, setRoom] = useState("");
   const [miniPlayer, setMiniPlayer] = useState(player);
   const [miniYaw, setMiniYaw] = useState(stateRef.current.yaw);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  useEffect(() => {
+    const query = window.matchMedia("(pointer: coarse)");
+    const update = () => setIsTouchDevice(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  // Touch D-pad writes into the same key set the keyboard handler uses
+  // below, so the movement/turn logic in the animate() loop needs no
+  // touch-specific branch — it just sees "arrowup" etc. already held.
+  const pressDirection = (key: string) => stateRef.current.keys.add(key);
+  const releaseDirection = (key: string) => stateRef.current.keys.delete(key);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -351,5 +366,41 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
       <div><button onClick={onOpenPeople}>{peopleLabel}</button><button onClick={onOpenBoard}>{boardLabel}</button></div>
     </div>
     {prompt && <button className="interaction-prompt" onClick={()=>{const t=stateRef.current.target;if(t)onInteract(t.kind,t.id);}}><kbd>E</kbd>{prompt.replace(/^按 E 互动 · |^Press E · /,"")}</button>}
+    {isTouchDevice && (
+      <div className="touch-dpad" aria-label={lang === "zh" ? "移动与转向控制" : "Move and turn controls"}>
+        <div className="touch-dpad-row">
+          <TouchDpadButton keyName="arrowup" onPress={pressDirection} onRelease={releaseDirection} label="↑" />
+        </div>
+        <div className="touch-dpad-row">
+          <TouchDpadButton keyName="arrowleft" onPress={pressDirection} onRelease={releaseDirection} label="←" />
+          <TouchDpadButton keyName="arrowdown" onPress={pressDirection} onRelease={releaseDirection} label="↓" />
+          <TouchDpadButton keyName="arrowright" onPress={pressDirection} onRelease={releaseDirection} label="→" />
+        </div>
+      </div>
+    )}
   </div>;
+}
+
+/**
+ * A single D-pad button. Uses onPointerDown/Up/Leave/Cancel rather than
+ * touch-specific events so the same component works for a mouse click too
+ * (useful for testing in a desktop browser without touch emulation), and
+ * releases the direction if a finger drags off the button mid-press.
+ */
+function TouchDpadButton({ keyName, label, onPress, onRelease }: {
+  keyName: string; label: string; onPress: (key: string) => void; onRelease: (key: string) => void;
+}) {
+  return (
+    <button
+      className="touch-dpad-button"
+      aria-label={keyName}
+      onPointerDown={(e) => { e.preventDefault(); onPress(keyName); }}
+      onPointerUp={() => onRelease(keyName)}
+      onPointerLeave={() => onRelease(keyName)}
+      onPointerCancel={() => onRelease(keyName)}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      {label}
+    </button>
+  );
 }
