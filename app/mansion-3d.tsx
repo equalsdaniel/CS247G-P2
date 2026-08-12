@@ -108,66 +108,76 @@ function makeClueModel(id: string) {
 
 function makeCharacterModel(id: string, fallbackColor: string) {
   const group = new THREE.Group();
-  const mat = (color: number | string) => new THREE.MeshStandardMaterial({ color, roughness: 1, flatShading: true });
-  const add = (geometry: THREE.BufferGeometry, color: number | string, position: [number,number,number], rotation?: [number,number,number]) => {
-    const mesh=new THREE.Mesh(geometry,mat(color));mesh.position.set(...position);if(rotation)mesh.rotation.set(...rotation);mesh.castShadow=true;group.add(mesh);return mesh;
+  const mat = (color: number | string) => new THREE.MeshStandardMaterial({ color, roughness: .72, metalness: 0 });
+  const add = (geometry: THREE.BufferGeometry, color: number | string, position: [number,number,number], scale: [number,number,number]=[1,1,1], rotation?: [number,number,number]) => {
+    const mesh=new THREE.Mesh(geometry,mat(color));mesh.position.set(...position);mesh.scale.set(...scale);if(rotation)mesh.rotation.set(...rotation);mesh.castShadow=true;group.add(mesh);return mesh;
   };
-  const eye = (x:number,y:number,z=-.285,color=0x312a28) => add(new THREE.SphereGeometry(.035,6,4),color,[x,y,z]);
+  const sphere=(color:number|string,p:[number,number,number],s:[number,number,number]=[1,1,1])=>add(new THREE.SphereGeometry(.36,20,14),color,p,s);
+  const small=(color:number|string,p:[number,number,number],s:[number,number,number]=[1,1,1])=>add(new THREE.SphereGeometry(.08,12,8),color,p,s);
 
   if(id === "felix") {
-    add(new THREE.BoxGeometry(1.05,.34,.62),0x34383f,[0,.2,0]);
-    add(new THREE.BoxGeometry(.2,.25,.025),0xe5dac5,[-.28,.24,-.32]);
-    add(new THREE.DodecahedronGeometry(.3,0),0xc49a78,[.72,.24,0]);
-    add(new THREE.BoxGeometry(.5,.13,.42),0xa9a29a,[.74,.47,.02],[0,0,-.08]);
-    eye(.64,.28); eye(.79,.28);
-    add(new THREE.BoxGeometry(.2,.04,.04),0x81766d,[.72,.14,-.285]);
-    group.userData.labelHeight=1.25;
-    return group;
+    add(new THREE.CapsuleGeometry(.25,.62,8,16),0x303846,[-.05,.2,0],[1,1,1],[0,0,Math.PI/2]);
+    sphere(0xc28d6c,[.7,.27,0],[1,1.08,.88]);
+    sphere(0xd5d0c8,[.7,.52,.05],[1.02,.42,.82]);
+    small(0x2c2928,[.59,.31,-.31],[.7,.25,.35]); small(0x2c2928,[.81,.31,-.31],[.7,.25,.35]);
+    small(0xb96d62,[.7,.25,-.34],[.55,1,.6]);
+    add(new THREE.TorusGeometry(.09,.018,6,12,Math.PI),0x7a665d,[.7,.13,-.33],[1,1,1],[0,0,0]);
+    group.userData.labelHeight=1.3; return group;
   }
 
-  const designs: Record<string,{body:number|string,skin:number,h:number,w:number}> = {
-    amy:{body:0x667b68,skin:0xd2a07f,h:1.08,w:.52}, coco:{body:0xa86f81,skin:0xe0ad8d,h:.98,w:.62},
-    dean:{body:0x364b62,skin:0xb98465,h:1.15,w:.68}, ben:{body:0x786aa0,skin:0xd7a280,h:1.16,w:.48},
-    ella:{body:0xc29455,skin:0x9f6b4e,h:.9,w:.58},
+  const designs:Record<string,{body:number|string,skin:number,hair:number,headY:number,bodyY:number}>={
+    amy:{body:0x6f8b75,skin:0xe2ae8e,hair:0x3e2928,headY:1.43,bodyY:.63},
+    coco:{body:0xa56d93,skin:0xf0b596,hair:0xa74367,headY:1.42,bodyY:.62},
+    dean:{body:0x3e5872,skin:0x8d5c45,hair:0x272526,headY:1.48,bodyY:.66},
+    ben:{body:0x727cb4,skin:0xe9b08b,hair:0xc96e32,headY:1.46,bodyY:.65},
+    ella:{body:0xd7aa5d,skin:0x9f6a4f,hair:0x302625,headY:1.37,bodyY:.58},
   };
-  const d=designs[id]||{body:fallbackColor,skin:0xc99b7b,h:1,w:.55};
-  const bodyY=.42+d.h/2;
-  if(id==="ella") add(new THREE.CylinderGeometry(d.w*.42,d.w*.7,d.h,6),d.body,[0,bodyY,0]);
-  else add(new THREE.BoxGeometry(d.w,d.h,.44),d.body,[0,bodyY,0]);
-  const headY=.42+d.h+.3;
-  const head=id==="dean"?add(new THREE.BoxGeometry(.53,.48,.46),d.skin,[0,headY,0]):add(new THREE.DodecahedronGeometry(id==="coco"?.32:.29,0),d.skin,[0,headY,0]);
-  head.castShadow=true; eye(-.1,headY+.035); eye(.1,headY+.035);
+  const d=designs[id]||{body:fallbackColor,skin:0xd5a080,hair:0x3a2d2b,headY:1.43,bodyY:.63};
+  add(new THREE.CapsuleGeometry(.29,.42,8,16),d.body,[0,d.bodyY,0]);
+  sphere(d.skin,[0,d.headY,0],[1,1.08,.88]);
+  small(d.skin,[-.36,d.headY,0],[.72,1.05,.65]); small(d.skin,[.36,d.headY,0],[.72,1.05,.65]);
+  const faceZ=-.325;
+  small(0x2b292b,[-.115,d.headY+.035,faceZ],[.63,1.05,.38]); small(0x2b292b,[.115,d.headY+.035,faceZ],[.63,1.05,.38]);
+  small(0xc96e63,[0,d.headY-.015,-.365],[.55,1.05,.58]);
+  small(0xe99a94,[-.24,d.headY-.07,-.3],[.82,.35,.3]); small(0xe99a94,[.24,d.headY-.07,-.3],[.82,.35,.3]);
+  add(new THREE.TorusGeometry(.1,.025,8,16,Math.PI),0x6f3439,[0,d.headY-.16,-.34],[1,1,1],[0,0,0]);
+  add(new THREE.BoxGeometry(.15,.045,.025),0xf5eee1,[0,d.headY-.145,-.37]);
 
   if(id==="amy") {
-    add(new THREE.BoxGeometry(.58,.2,.45),0x352f30,[0,headY+.22,.03]);
-    add(new THREE.BoxGeometry(.12,.48,.4),0x352f30,[-.25,headY-.04,.03]);
-    add(new THREE.SphereGeometry(.045,6,4),0xe9d2a1,[.29,headY-.03,-.18]);
-    add(new THREE.BoxGeometry(.16,.06,.025),0x8e3f44,[0,headY-.13,-.28]);
+    sphere(d.hair,[0,d.headY+.15,.1],[1.06,.84,.8]);
+    sphere(d.skin,[0,d.headY,0],[1,1.08,.88]);
+    sphere(d.hair,[-.23,d.headY+.24,-.12],[.62,.48,.42]); sphere(d.hair,[.2,d.headY+.23,-.13],[.65,.45,.42]);
+    sphere(d.hair,[-.3,d.headY-.02,.08],[.42,.86,.5]);
+    small(0xf0d6a0,[.39,d.headY-.02,-.05],[.45,.45,.4]);
+    add(new THREE.BoxGeometry(.4,.12,.08),0xd9e1ce,[0,d.bodyY+.25,-.27]);
   } else if(id==="coco") {
-    add(new THREE.BoxGeometry(.68,.2,.4),0x7f493e,[0,headY+.22,.05]);
-    add(new THREE.BoxGeometry(.16,.64,.37),0x7f493e,[.27,headY-.13,.08]);
-    [-.1,.1].forEach(x=>add(new THREE.TorusGeometry(.085,.015,5,10),0x4d3b35,[x,headY+.035,-.29]));
-    add(new THREE.BoxGeometry(.09,.02,.02),0x4d3b35,[0,headY+.035,-.29]);
-    add(new THREE.BoxGeometry(.48,.12,.48),0xe2c78f,[0,bodyY+.28,-.05]);
+    sphere(d.hair,[0,d.headY+.12,.1],[1.08,.88,.82]); sphere(d.skin,[0,d.headY,0],[1,1.08,.88]);
+    for(const x of[-.28,-.12,.13,.29])sphere(d.hair,[x,d.headY+.24,-.12],[.46,.42,.38]);
+    sphere(d.hair,[-.3,d.headY-.12,.08],[.38,.82,.45]); sphere(d.hair,[.3,d.headY-.12,.08],[.38,.82,.45]);
+    for(const x of[-.115,.115])add(new THREE.TorusGeometry(.105,.018,8,16),0x6f304b,[x,d.headY+.035,-.36]);
+    add(new THREE.BoxGeometry(.08,.018,.02),0x6f304b,[0,d.headY+.035,-.37]);
+    add(new THREE.TorusGeometry(.25,.025,8,16),0xf1d7a0,[0,d.bodyY+.22,-.23],[1,1,1],[Math.PI/2,0,0]);
   } else if(id==="dean") {
-    add(new THREE.BoxGeometry(.55,.16,.45),0x302a28,[0,headY+.27,.02]);
-    add(new THREE.BoxGeometry(.22,.055,.045),0x49352f,[-.11,headY-.1,-.25],[0,0,-.12]);
-    add(new THREE.BoxGeometry(.22,.055,.045),0x49352f,[.11,headY-.1,-.25],[0,0,.12]);
-    add(new THREE.BoxGeometry(.24,.36,.025),0xe8dfcf,[0,bodyY+.25,-.235]);
-    add(new THREE.BoxGeometry(.1,.34,.025),0x7d3040,[0,bodyY+.18,-.25]);
-    for(let i=0;i<3;i++)add(new THREE.SphereGeometry(.027,6,4),0xd8b45e,[-.18,bodyY+.32-i*.18,-.24]);
+    sphere(d.hair,[0,d.headY+.25,.04],[1,.35,.8]);
+    for(const x of[-.12,0,.12])small(d.hair,[x,d.headY+.28,-.15],[1.05,.7,.8]);
+    add(new THREE.BoxGeometry(.2,.055,.035),0x3c2826,[0,d.headY-.13,-.37]);
+    add(new THREE.BoxGeometry(.22,.32,.035),0xeee7dc,[0,d.bodyY+.15,-.28]);
+    add(new THREE.BoxGeometry(.08,.28,.04),0x9d3644,[0,d.bodyY+.12,-.31]);
+    for(let i=0;i<3;i++)small(0xe4bd5c,[-.15,d.bodyY+.23-i*.13,-.29],[.25,.25,.2]);
   } else if(id==="ben") {
-    add(new THREE.BoxGeometry(.5,.18,.42),0x3b302c,[0,headY+.22,.03]);
-    add(new THREE.TorusGeometry(.34,.04,6,12,Math.PI),0x2f3948,[0,headY+.08,0],[0,0,0]);
-    add(new THREE.BoxGeometry(.1,.28,.13),0x2f3948,[-.31,headY,0]); add(new THREE.BoxGeometry(.1,.28,.13),0x2f3948,[.31,headY,0]);
-    add(new THREE.BoxGeometry(.34,.12,.025),0xc9b5e5,[0,bodyY+.16,-.24]);
+    sphere(d.hair,[.03,d.headY+.2,.05],[1.05,.62,.8]); sphere(d.skin,[0,d.headY,0],[1,1.08,.88]);
+    sphere(d.hair,[.15,d.headY+.29,-.12],[.85,.38,.42]); sphere(d.hair,[-.16,d.headY+.25,-.13],[.58,.35,.4]);
+    for(const x of[-.115,.115])add(new THREE.TorusGeometry(.105,.018,8,16),0xf1eee7,[x,d.headY+.035,-.36]);
+    add(new THREE.BoxGeometry(.08,.018,.02),0xf1eee7,[0,d.headY+.035,-.37]);
+    add(new THREE.TorusGeometry(.39,.04,8,18,Math.PI),0x35425c,[0,d.headY+.05,.03]);
+    small(0x35425c,[-.37,d.headY,.02],[.6,1.4,.5]); small(0x35425c,[.37,d.headY,.02],[.6,1.4,.5]);
   } else if(id==="ella") {
-    add(new THREE.SphereGeometry(.2,8,6),0x332b29,[0,headY+.26,.08]);
-    add(new THREE.BoxGeometry(.43,.68,.035),0xf0dfbd,[0,bodyY-.02,-.25]);
-    add(new THREE.BoxGeometry(.5,.1,.46),0xf0dfbd,[0,bodyY+.42,0]);
-    add(new THREE.BoxGeometry(.28,.07,.025),0x874c47,[0,headY-.12,-.28]);
+    sphere(d.hair,[0,d.headY+.12,.1],[1.06,.82,.82]); sphere(d.skin,[0,d.headY,0],[1,1.08,.88]);
+    sphere(d.hair,[0,d.headY+.38,.12],[.6,.55,.58]); sphere(d.hair,[-.25,d.headY+.18,-.1],[.5,.42,.4]);
+    add(new THREE.BoxGeometry(.44,.53,.035),0xf5e6c8,[0,d.bodyY-.02,-.29]);
+    small(0x62c6a8,[-.39,d.headY-.04,-.06],[.4,.55,.4]); small(0x62c6a8,[.39,d.headY-.04,-.06],[.4,.55,.4]);
   }
-  group.userData.labelHeight=headY+.65;
+  group.userData.labelHeight=d.headY+.65;
   return group;
 }
 
