@@ -271,7 +271,10 @@ export default function Mansion3D({ floor, lang, player, setPlayer, actors, clue
     actors.filter(a => a.floor === floor).forEach(actor => {
       const p = toWorld(actor);
       const group = new THREE.Group(); group.position.set(p.x, 0, p.z); group.userData = { kind: "actor", id: actor.id, label: actor.name };
-      const model=makeCharacterModel(actor.id,actor.color||"#777"); if(actor.id==="felix")group.position.y=.83; group.add(model);
+      const model=makeCharacterModel(actor.id,actor.color||"#777");
+      if(actor.id==="felix")group.position.y=.83;
+      if(actor.id==="amy")model.position.y=.43;
+      group.add(model);
       const label = labelSprite(actor.name); label.position.y = model.userData.labelHeight || 2.28; group.add(label); scene.add(group); interactive.push(group);
     });
     clues.filter(c => c.floor === floor && !found.includes(c.id)).forEach(clue => {

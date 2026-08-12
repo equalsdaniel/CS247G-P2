@@ -15,10 +15,10 @@ const MAP_H = 600;
 const PLAYER_R = 12;
 
 const actors: Actor[] = [
-  { id: "amy", name: "Amy", room: "餐厅", x: 525, y: 162, floor: 1, color: "#78947d" },
+  { id: "amy", name: "Amy", room: "餐厅", x: 546, y: 220, floor: 1, color: "#78947d" },
   { id: "coco", name: "Coco", room: "客厅", x: 300, y: 370, floor: 1, color: "#9c6f78" },
   { id: "dean", name: "Dean", room: "管家室", x: 795, y: 392, floor: 1, color: "#727e91" },
-  { id: "ella", name: "Ella", room: "厨房", x: 660, y: 162, floor: 1, color: "#b89564" },
+  { id: "ella", name: "Ella", room: "厨房", x: 714, y: 245, floor: 1, color: "#b89564" },
   { id: "ben", name: "Ben", room: "二楼走廊", x: 455, y: 290, floor: 2, color: "#8277a1" },
   { id: "felix", name: "Felix", room: "主卧", x: 742, y: 225, floor: 2, color: "#4a4543" },
 ];
