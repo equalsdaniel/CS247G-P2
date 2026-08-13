@@ -488,6 +488,25 @@ const publicProfiles = [
   },
 ] as const;
 
+function RelationshipProfiles({ lang }: { lang: Lang }) {
+  const felix = publicProfiles[0];
+  const others = publicProfiles.slice(1);
+  const avatar = (id: string) => <div className={`relation-avatar avatar-${id}`} aria-hidden="true"><i className="avatar-hair"/><i className="avatar-face"><i className="avatar-eye left"/><i className="avatar-eye right"/><i className="avatar-nose"/><i className="avatar-mouth"/></i><i className="avatar-body"/><i className="avatar-accessory"/></div>;
+  return <>
+    <section className="relationship-section" aria-label={lang === "zh" ? "人物关系图" : "Relationship map"}>
+      <div className="relationship-heading"><b>{lang === "zh" ? "公开人物关系" : "KNOWN RELATIONSHIPS"}</b><span>{lang === "zh" ? "调查开始前已确认" : "Confirmed before investigation"}</span></div>
+      <div className="relationship-map">
+        <div className="relation-line line-amy"/><div className="relation-line line-coco"/><div className="relation-line line-ben"/><div className="relation-line line-dean"/><div className="relation-line line-ella"/>
+        <article className="relation-person relation-felix victim">{avatar("felix")}<div><b>Felix</b><span>{lang === "zh" ? "死者 · 别墅主人" : "Victim · Villa Owner"}</span><p>{felix[lang].note}</p></div></article>
+        {others.map(profile => <article className={`relation-person relation-${profile.id}`} key={profile.id}>
+          {avatar(profile.id)}
+          <div><b>{profile.name}</b><span>{profile[lang].role}</span><p>{profile[lang].note}</p></div>
+        </article>)}
+      </div>
+    </section>
+  </>;
+}
+
 const ui = {
   zh: {
     title: "别墅谋杀案", summary: "暴雨封锁了山路。Felix死在自动上锁的主卧里，五名仍留在别墅中的人各自隐瞒了一段记忆。", enter: "进入别墅",
@@ -826,6 +845,23 @@ export default function GameClient() {
   const [boardOpen, setBoardOpen] = useState(false);
   const [result, setResult] = useState<"good" | "bad" | null>(null);
   const [toast, setToast] = useState("");
+  const [musicOn, setMusicOn] = useState(false);
+  const musicRef = useRef<HTMLAudioElement | null>(null);
+
+  const startMusic = useCallback(() => {
+    if (!musicRef.current) {
+      const audio = new Audio(`${import.meta.env.BASE_URL}audio/villa-background.mp3`);
+      audio.loop = true;
+      audio.volume = 0.32;
+      musicRef.current = audio;
+    }
+    void musicRef.current.play().then(() => setMusicOn(true)).catch(() => setMusicOn(false));
+  }, []);
+
+  const toggleMusic = useCallback(() => {
+    if (!musicRef.current || musicRef.current.paused) startMusic();
+    else { musicRef.current.pause(); setMusicOn(false); }
+  }, [startMusic]);
 
   const setPlayer = useCallback((p: Point) => setPlayerState(p), []);
 
@@ -850,6 +886,8 @@ export default function GameClient() {
   useEffect(() => {
     localStorage.setItem("case07-save", JSON.stringify({ found, talked, memoriesDone }));
   }, [found, talked, memoriesDone]);
+
+  useEffect(() => () => { musicRef.current?.pause(); }, []);
 
   const restartGame = useCallback(() => {
     localStorage.removeItem("case07-save");
@@ -926,24 +964,9 @@ export default function GameClient() {
           <p className="eyebrow">CASE 07 · {ui[lang].profilesEyebrow}</p>
           <h1 id="profiles-title">{ui[lang].profilesTitle}</h1>
           <p className="profiles-intro">{ui[lang].profilesIntro}</p>
-          <div className="profile-grid">
-            {publicProfiles.map((profile) => {
-              const copy = profile[lang];
-              return (
-                <article className={`profile-card ${profile.id === "felix" ? "victim" : ""}`} key={profile.id}>
-                  <div className="profile-mark" style={{ background: profile.color }}>{profile.name.slice(0, 1)}</div>
-                  <div className="profile-copy">
-                    <span>{ui[lang].publicRecord} · {copy.relation}</span>
-                    <h2>{profile.name}</h2>
-                    <strong>{copy.role}</strong>
-                    <p>{copy.note}</p>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+          <RelationshipProfiles lang={lang}/>
           <div className="profiles-actions">
-            <button className="primary-button large" onClick={() => { setProfilesOpen(false); setStarted(true); }}>{ui[lang].enterAfterProfiles}</button>
+            <button className="primary-button large" onClick={() => { startMusic(); setProfilesOpen(false); setStarted(true); }}>{ui[lang].enterAfterProfiles}</button>
           </div>
         </section>
       </main>
@@ -978,6 +1001,7 @@ export default function GameClient() {
           <span>{ui[lang].evidence} {found.length}/{clues.length}</span>
           <span>{ui[lang].witnesses} {talked.length}/5</span>
           <span>{ui[lang].memories} {memoriesDone.length}/6</span>
+          <button className="music-button" onClick={toggleMusic} aria-pressed={musicOn}>{musicOn ? (lang === "zh" ? "♫ 音乐开" : "♫ Music On") : (lang === "zh" ? "♫ 音乐关" : "♫ Music Off")}</button>
           <button className="restart-button" onClick={restartGame}>{ui[lang].restart}</button>
         </div>
       </header>
@@ -991,22 +1015,7 @@ export default function GameClient() {
             <p className="eyebrow">CASE 07 · {ui[lang].profilesEyebrow}</p>
             <h1 id="profiles-modal-title">{ui[lang].profilesTitle}</h1>
             <p className="profiles-intro">{ui[lang].profilesIntro}</p>
-            <div className="profile-grid">
-              {publicProfiles.map((profile) => {
-                const copy = profile[lang];
-                return (
-                  <article className={`profile-card ${profile.id === "felix" ? "victim" : ""}`} key={profile.id}>
-                    <div className="profile-mark" style={{ background: profile.color }}>{profile.name.slice(0, 1)}</div>
-                    <div className="profile-copy">
-                      <span>{ui[lang].publicRecord} · {copy.relation}</span>
-                      <h2>{profile.name}</h2>
-                      <strong>{copy.role}</strong>
-                      <p>{copy.note}</p>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
+            <RelationshipProfiles lang={lang}/>
           </section>
         </div>
       )}
